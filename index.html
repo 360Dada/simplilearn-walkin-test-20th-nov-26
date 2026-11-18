@@ -656,6 +656,9 @@
 
   <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
   <script>
+    // Pre-configured Google Apps Script Web App URL for live walk-in sync across all candidate devices
+    const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxcnildeWJka3_Ry0vJnf77SRzX_38YLiyaU7KeSTjWYAUwsg0kKkS1BXN3A4iWK1fh/exec";
+
     // -------------------------------------------------------------------------
     // 8. HR ADMIN MODAL
     // -------------------------------------------------------------------------
@@ -676,7 +679,7 @@
       if (pin === "1926") {
         document.getElementById("adminPinSection").classList.add("hidden");
         document.getElementById("adminDashboardSection").classList.remove("hidden");
-        document.getElementById("webhookUrlInput").value = localStorage.getItem(STORAGE_KEYS.WEBHOOK) || "";
+        document.getElementById("webhookUrlInput").value = localStorage.getItem(STORAGE_KEYS.WEBHOOK) || DEFAULT_WEBHOOK_URL;
         initWalkInQRGenerator();
         renderAdminLogsTable();
       } else {
@@ -1175,7 +1178,8 @@
     // 7. GOOGLE SHEETS WEBHOOK SYNC
     // -------------------------------------------------------------------------
     function syncToGoogleSheetWebhook(record) {
-      const webhookUrl = localStorage.getItem(STORAGE_KEYS.WEBHOOK);
+      const savedOverride = (localStorage.getItem(STORAGE_KEYS.WEBHOOK) || "").trim();
+      const webhookUrl = savedOverride || DEFAULT_WEBHOOK_URL;
       if (!webhookUrl) return;
 
       try {
@@ -1187,34 +1191,6 @@
         }).catch(() => {});
       } catch (e) {
         // Silently fail if offline; record is already safely in localStorage
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 8. HR ADMIN MODAL (PIN: 2026)
-    // -------------------------------------------------------------------------
-    function openAdminAuth() {
-      document.getElementById("adminModal").classList.remove("hidden");
-      document.getElementById("adminPinSection").classList.remove("hidden");
-      document.getElementById("adminDashboardSection").classList.add("hidden");
-      document.getElementById("adminPinInput").value = "";
-      setTimeout(() => document.getElementById("adminPinInput").focus(), 100);
-    }
-
-    function closeAdminModal() {
-      document.getElementById("adminModal").classList.add("hidden");
-    }
-
-    function verifyAdminPin() {
-      const pin = document.getElementById("adminPinInput").value.trim();
-      if (pin === "2026") {
-        document.getElementById("adminPinSection").classList.add("hidden");
-        document.getElementById("adminDashboardSection").classList.remove("hidden");
-        document.getElementById("webhookUrlInput").value = localStorage.getItem(STORAGE_KEYS.WEBHOOK) || "";
-        initWalkInQRGenerator();
-        renderAdminLogsTable();
-      } else {
-        showToast("Incorrect HR PIN. Default walk-in PIN is 2026.");
       }
     }
 
@@ -1466,8 +1442,14 @@
         showToast("Please enter a valid https:// Google Apps Script Web App URL.");
         return;
       }
-      localStorage.setItem(STORAGE_KEYS.WEBHOOK, url);
-      showToast(url ? "Google Sheet Webhook URL saved!" : "Webhook URL cleared.");
+      if (!url || url === DEFAULT_WEBHOOK_URL) {
+        localStorage.removeItem(STORAGE_KEYS.WEBHOOK);
+        document.getElementById("webhookUrlInput").value = DEFAULT_WEBHOOK_URL;
+        showToast("Using built-in Google Sheet Webhook URL!");
+      } else {
+        localStorage.setItem(STORAGE_KEYS.WEBHOOK, url);
+        showToast("Custom Google Sheet Webhook override saved!");
+      }
     }
 
     function toggleScriptSnippet() {
