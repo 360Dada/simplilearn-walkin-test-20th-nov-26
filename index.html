@@ -443,6 +443,7 @@
       align-items: center;
       justify-content: center;
       margin: 0 auto 12px;
+      cursor: pointer;
     }
     .summary-box {
       margin-top: 16px;
@@ -519,6 +520,7 @@
       align-items: center;
       justify-content: center;
       margin: 0 auto 12px;
+      cursor: pointer;
     }
     .reject-meta {
       margin-top: 14px;
@@ -599,11 +601,11 @@
 </head>
 <body>
 
-  <!-- TOP HEADER (Tap 'S' logo 5 times quickly to open Coordinator Reset Modal) -->
+  <!-- TOP HEADER (Tap 'S' logo 5 times quickly on main screen for Coordinator Reset) -->
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="brand-logo" onclick="handleSecretLogoTap()" title="Simplilearn">S</div>
+        <div class="brand-logo" onclick="handleSecretResetTap()" title="Simplilearn">S</div>
         <div>
           <p class="brand-title">Simplilearn</p>
           <p class="brand-sub">Freshers Walk-In Assessment</p>
@@ -726,11 +728,11 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- SCREEN 3A: COMPLETION RECEIPT + OFFLINE AUTO-RETRY SYNC   -->
+    <!-- SCREEN 3A: COMPLETION RECEIPT (Tap ✓ 5x to reset device)  -->
     <!-- ========================================================= -->
     <section id="screenComplete" style="display: none; margin: auto 0;">
       <div class="card receipt-card">
-        <div class="icon-circle-ok">✓</div>
+        <div class="icon-circle-ok" onclick="handleSecretResetTap()">✓</div>
         <h2>Assessment Submitted</h2>
         <p class="subtext">Thank you, <strong id="receiptName" style="color: #0f172a;"></strong>. Your responses are saved locally.</p>
 
@@ -776,11 +778,11 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- SCREEN 3B: FULL-SCREEN DISQUALIFICATION LOCK (3RD STRIKE) -->
+    <!-- SCREEN 3B: REJECTION LOCK (Tap ✕ 5x to reset device)      -->
     <!-- ========================================================= -->
     <section id="screenRejected" style="display: none;" class="reject-overlay">
       <div class="reject-box">
-        <div class="icon-circle-bad">✕</div>
+        <div class="icon-circle-bad" onclick="handleSecretResetTap()">✕</div>
         <div style="display: inline-block; padding: 4px 12px; border-radius: 999px; background: #450a0a; color: #fecaca; font-size: 11px; font-weight: 800; letter-spacing: 0.05em;">
           INTERVIEW REJECTED (3/3 VIOLATIONS)
         </div>
@@ -818,7 +820,7 @@
     </div>
   </div>
 
-  <!-- HIDDEN COORDINATOR RESET MODAL (Triggered by tapping 'S' logo 5 times) -->
+  <!-- HIDDEN COORDINATOR RESET MODAL (5-tap on S, ✓, or ✕ icon) -->
   <div id="coordResetModal" style="display: none;" class="modal-backdrop">
     <div class="modal-box">
       <h3 style="margin: 0 0 6px; font-size: 17px; font-weight: 800;">Coordinator Device Reset</h3>
@@ -966,6 +968,7 @@
     var userResponses = {};
     var warningCount = 0;
     var isWarningModalOpen = false;
+    var isUnloadingPage = false; // Prevents refresh/reload from counting as a strike!
     var lastViolationTimestamp = 0;
     var isTestRunning = false;
     var proctorArmed = false;
@@ -974,14 +977,27 @@
     var retrySyncInterval = null;
     var remainingSeconds = 1800;
 
-    // Secret 5-tap logo variables
-    var logoTapCount = 0;
-    var logoTapTimer = null;
+    // Secret 5-tap reset variables
+    var secretTapCount = 0;
+    var secretTapTimer = null;
+
+    // =========================================================================
+    // PREVENT PAGE REFRESH / RELOAD FROM TRIGGERING PROCTORING STRIKES
+    // =========================================================================
+    window.addEventListener("beforeunload", function () {
+      isUnloadingPage = true;
+      persistActiveSession();
+    });
+    window.addEventListener("pagehide", function () {
+      isUnloadingPage = true;
+      persistActiveSession();
+    });
 
     // =========================================================================
     // INITIALIZATION, SEAMLESS REFRESH RECOVERY & BACKGROUND RETRY QUEUE
     // =========================================================================
     window.onload = function () {
+      isUnloadingPage = false;
       try {
         // 1. Support URL ?reset=1926 fallback
         var params = new URLSearchParams(window.location.search);
@@ -991,7 +1007,7 @@
           return;
         }
 
-        // 2. If there is an unsynced completed/rejected payload in queue, start auto-retry loop
+        // 2. Resume background auto-retry queue if an unsynced payload exists
         var pendingPayload = localStorage.getItem(PENDING_SYNC_KEY);
         if (pendingPayload) {
           startAutoRetryLoop();
@@ -1013,7 +1029,7 @@
           return;
         }
 
-        // 4. Seamless Page Refresh Recovery (No error, no strike penalty)
+        // 4. Seamless Page Refresh Recovery (Zero error, zero strike penalty)
         var savedSessionRaw = localStorage.getItem(SESSION_STORAGE_KEY);
         if (savedSessionRaw) {
           var sess = JSON.parse(savedSessionRaw);
@@ -1039,7 +1055,7 @@
             startCountdownTimer();
 
             setTimeout(function () {
-              if (isTestRunning) proctorArmed = true;
+              if (isTestRunning && !isUnloadingPage) proctorArmed = true;
             }, 1500);
           }
         }
@@ -1071,13 +1087,13 @@
     }
 
     // =========================================================================
-    // HIDDEN COORDINATOR RESET (TAP 'S' LOGO 5 TIMES QUICKLY)
+    // UNIVERSAL 5-TAP COORDINATOR RESET (Works on Header 'S', Receipt '✓', & Lock '✕')
     // =========================================================================
-    function handleSecretLogoTap() {
-      logoTapCount++;
-      clearTimeout(logoTapTimer);
-      if (logoTapCount >= 5) {
-        logoTapCount = 0;
+    function handleSecretResetTap() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      if (secretTapCount >= 5) {
+        secretTapCount = 0;
         document.getElementById("coordPinInput").value = "";
         document.getElementById("coordPinError").style.display = "none";
         document.getElementById("coordResetModal").style.display = "flex";
@@ -1086,9 +1102,9 @@
         }, 100);
         return;
       }
-      logoTapTimer = setTimeout(function () {
-        logoTapCount = 0;
-      }, 2000);
+      secretTapTimer = setTimeout(function () {
+        secretTapCount = 0;
+      }, 2500);
     }
 
     function closeCoordResetModal() {
@@ -1099,6 +1115,7 @@
       var entered = document.getElementById("coordPinInput").value.trim();
       if (entered === SECRET_RESET_CODE) {
         clearAllDeviceStorage();
+        isUnloadingPage = true;
         window.location.href = window.location.pathname;
       } else {
         document.getElementById("coordPinError").style.display = "block";
@@ -1222,7 +1239,7 @@
       startCountdownTimer();
 
       setTimeout(function () {
-        if (isTestRunning) proctorArmed = true;
+        if (isTestRunning && !isUnloadingPage) proctorArmed = true;
       }, 2000);
     }
 
@@ -1240,7 +1257,7 @@
     }
 
     function registerViolation(reason) {
-      if (!isTestRunning) return;
+      if (!isTestRunning || isUnloadingPage) return;
 
       var now = Date.now();
       if (now - lastViolationTimestamp < 1500) return;
@@ -1267,7 +1284,7 @@
       document.getElementById("warningModal").style.display = "none";
       isWarningModalOpen = false;
       setTimeout(function () {
-        if (isTestRunning) proctorArmed = true;
+        if (isTestRunning && !isUnloadingPage) proctorArmed = true;
       }, 1000);
     }
 
@@ -1293,13 +1310,13 @@
     }
 
     document.addEventListener("visibilitychange", function () {
-      if (document.hidden && isTestRunning && proctorArmed && !isWarningModalOpen) {
+      if (document.hidden && isTestRunning && proctorArmed && !isWarningModalOpen && !isUnloadingPage) {
         registerViolation("Switched browser tab, minimized browser, or opened another app.");
       }
     });
 
     window.addEventListener("blur", function () {
-      if (isTestRunning && proctorArmed && !isWarningModalOpen) {
+      if (isTestRunning && proctorArmed && !isWarningModalOpen && !isUnloadingPage) {
         registerViolation("Left the active test window or opened an external notification/overlay.");
       }
     });
@@ -1474,7 +1491,7 @@
         submitFinalAssessment("Submitted Normally (Warnings: " + warningCount + ")");
       } else {
         setTimeout(function () {
-          if (isTestRunning && !isWarningModalOpen) proctorArmed = true;
+          if (isTestRunning && !isWarningModalOpen && !isUnloadingPage) proctorArmed = true;
         }, 500);
       }
     }
