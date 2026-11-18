@@ -177,15 +177,6 @@
     .rules-box li {
       margin-bottom: 4px;
     }
-    .info-note {
-      margin-top: 10px;
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 10px;
-      padding: 9px 12px;
-      font-size: 11.5px;
-      color: #0369a1;
-    }
     .error-banner {
       margin-top: 12px;
       background: #fffbeb;
@@ -207,6 +198,27 @@
       font-weight: 700;
       color: #334155;
       margin-bottom: 6px;
+    }
+    .grad-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .grad-chip {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .grad-chip:active {
+      background: #eff6ff;
+      border-color: #2563eb;
+      color: #1d4ed8;
     }
     .input-field {
       width: 100%;
@@ -336,7 +348,7 @@
       color: #475569;
       margin-bottom: 10px;
     }
-    .cat-tag.tech {
+    .cat-tag.prog {
       background: #eff6ff;
       color: #1d4ed8;
     }
@@ -642,7 +654,7 @@
   <main class="main-wrap">
 
     <!-- ========================================================= -->
-    <!-- SCREEN 1: UNIFIED REGISTRATION & RULES                    -->
+    <!-- SCREEN 1: REGISTRATION WITH GRADUATION FIELD              -->
     <!-- ========================================================= -->
     <section id="screenRegister" style="display: block;">
       <div class="card">
@@ -659,15 +671,22 @@
           </ul>
         </div>
 
-        <div class="info-note">
-          <strong>Note:</strong> For technical/programming questions, candidates from non-engineering backgrounds may select <em>"Not from a technical background"</em> (Option E).
-        </div>
-
         <div id="regErrorBanner" style="display: none;" class="error-banner"></div>
 
         <div class="form-group">
           <label class="label" for="candName">Full Name *</label>
           <input type="text" id="candName" class="input-field" placeholder="Enter your full name" />
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="candGraduation">Graduation / Degree (e.g., B.Tech, BCA, B.Com, BBA) *</label>
+          <div class="grad-chips">
+            <button type="button" class="grad-chip" onclick="fillGraduation('B.Tech / B.E.')">B.Tech / B.E.</button>
+            <button type="button" class="grad-chip" onclick="fillGraduation('BCA / B.Sc CS')">BCA / B.Sc CS</button>
+            <button type="button" class="grad-chip" onclick="fillGraduation('B.Com / BBA')">B.Com / BBA</button>
+            <button type="button" class="grad-chip" onclick="fillGraduation('BA / B.Sc (Non-CS)')">BA / B.Sc (Non-CS)</button>
+          </div>
+          <input type="text" id="candGraduation" class="input-field" placeholder="Tap a chip above or type your graduation degree" />
         </div>
 
         <div class="form-group">
@@ -749,8 +768,8 @@
             <strong id="receiptRefId" style="font-family: monospace;"></strong>
           </div>
           <div class="summary-row">
-            <span style="color: #64748b;">Assessment:</span>
-            <strong id="receiptTrack">Learning Designer - Intern</strong>
+            <span style="color: #64748b;">Graduation:</span>
+            <strong id="receiptGraduation"></strong>
           </div>
           <div class="summary-row">
             <span style="color: #64748b;">Attempted:</span>
@@ -904,28 +923,28 @@
     var NON_TECH_OPTION = "Not from a technical background";
 
     // =========================================================================
-    // 30-QUESTION BANK (isTech: true adds 5th option "Not from a technical background")
+    // 30-QUESTION BANK (Q1-Q20: 4 Options | Q21-Q30: +5th Non-Tech Option)
     // =========================================================================
     var QUESTION_BANK = [
-      { id: 1, isTech: true, category: "Operating Systems",
+      { id: 1, hasNonTechOpt: false, category: "Operating Systems",
         q: "A computer has 8 GB RAM, but running applications require 12 GB of memory. How does the OS handle this?",
         options: ["CPU cache expansion", "Dynamic RAM allocation", "Virtual memory and paging", "Process scheduling"] },
-      { id: 2, isTech: false, category: "Quantitative Aptitude",
+      { id: 2, hasNonTechOpt: false, category: "Quantitative Aptitude",
         q: "A dataset has 10 values with an average of 20. If a value of 50 is removed, what is the new average?",
         options: ["16.67", "15.00", "17.50", "18.33"] },
-      { id: 3, isTech: true, category: "SQL & Databases",
+      { id: 3, hasNonTechOpt: false, category: "SQL & Databases",
         q: "An Employees table has 100 rows, including 20 NULL salaries and 10 salaries equal to zero. What does this query return?\n\nSELECT COUNT(salary) FROM Employees;",
         options: ["70", "90", "100", "80"] },
-      { id: 4, isTech: true, category: "Databases (ACID)",
+      { id: 4, hasNonTechOpt: false, category: "Databases (ACID)",
         q: "Two transactions update the same record simultaneously. Which ACID property primarily controls their interaction?",
         options: ["Atomicity", "Isolation", "Consistency", "Durability"] },
-      { id: 5, isTech: true, category: "Machine Learning",
+      { id: 5, hasNonTechOpt: false, category: "Machine Learning",
         q: "An ML model achieves 99% training accuracy but only 65% test accuracy. What is the most likely issue, assuming comparable datasets?",
         options: ["High bias", "Underfitting", "Overfitting", "Poor convergence"] },
-      { id: 6, isTech: true, category: "Generative AI",
+      { id: 6, hasNonTechOpt: false, category: "Generative AI",
         q: "An AI chatbot confidently generates fabricated facts and nonexistent references. What is this called?",
         options: ["Hallucination", "Model bias", "Knowledge distillation", "Context truncation"] },
-      { id: 7, isTech: false, category: "Analytical Reasoning",
+      { id: 7, hasNonTechOpt: false, category: "Analytical Reasoning",
         q: "Which prompt is most likely to produce an accurate, source-grounded technical summary?",
         options: [
           "Summarize in five bullets and add relevant background",
@@ -933,16 +952,16 @@
           "Summarize five findings and fill missing details",
           "Summarize five findings using only the source; flag missing details"
         ] },
-      { id: 8, isTech: true, category: "Algorithms",
+      { id: 8, hasNonTechOpt: false, category: "Algorithms",
         q: "What is the worst-case time complexity of binary search on a sorted array?",
         options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"] },
-      { id: 9, isTech: true, category: "Computer Networks",
+      { id: 9, hasNonTechOpt: false, category: "Computer Networks",
         q: "A website works through its IP address but fails through its domain name. Which component should be checked first?",
         options: ["TCP", "HTTP", "DNS", "Network adapter"] },
-      { id: 10, isTech: true, category: "Software Testing",
+      { id: 10, hasNonTechOpt: false, category: "Software Testing",
         q: "An application accepts ages from 18 to 60, inclusive. Which set is most suitable for boundary-value testing?",
         options: ["18, 19, 59, 60", "17, 19, 59, 61", "16, 18, 60, 62", "17, 18, 60, 61"] },
-      { id: 11, isTech: false, category: "Logical Reasoning",
+      { id: 11, hasNonTechOpt: false, category: "Logical Reasoning",
         q: "A software testing team reports:\n\"All critical bugs must be resolved before deployment. Some non-critical bugs may remain unresolved if they do not affect core functionality. The current build has no critical bugs, but three non-critical bugs remain.\"\n\nWhich conclusion is most accurate?",
         options: [
           "The build is ready for deployment because no critical bugs remain",
@@ -950,13 +969,13 @@
           "The build is functionally stable because only non-critical bugs remain",
           "The build requires all remaining bugs to be fixed before deployment"
         ] },
-      { id: 12, isTech: false, category: "Quantitative Aptitude",
+      { id: 12, hasNonTechOpt: false, category: "Quantitative Aptitude",
         q: "Find the next value in the sequence:\n2, 6, 12, 20, 30, 42, ___",
         options: ["54", "58", "56", "60"] },
-      { id: 13, isTech: false, category: "Quantitative Aptitude",
+      { id: 13, hasNonTechOpt: false, category: "Quantitative Aptitude",
         q: "Two servers have processing capacities in the ratio 3:5. Server A's capacity increases by 40%, and Server B's by 20%.\nWhat is the new ratio?",
         options: ["7:10", "7:9", "3:4", "4:5"] },
-      { id: 14, isTech: false, category: "Quantitative Aptitude",
+      { id: 14, hasNonTechOpt: false, category: "Quantitative Aptitude",
         q: "Two servers transfer a 900 MB file at 30 MB/s and 45 MB/s, respectively. Server B starts 10 seconds later.\nWhich statement is correct?",
         options: [
           "Server A finishes 5 seconds earlier",
@@ -964,7 +983,7 @@
           "Server B finishes 5 seconds earlier",
           "Server B finishes 10 seconds earlier"
         ] },
-      { id: 15, isTech: false, category: "Quantitative Aptitude",
+      { id: 15, hasNonTechOpt: false, category: "Quantitative Aptitude",
         q: "A company spends ₹80,000 per month on cloud infrastructure.\nAfter optimization, the monthly cost decreases by 25%. Due to increased usage, the optimized cost subsequently increases by 20%.\nWhat is the final monthly cost, and what is the overall percentage change from the original cost?",
         options: [
           "₹72,000; 10% decrease",
@@ -972,19 +991,19 @@
           "₹80,000; no change",
           "₹84,000; 5% increase"
         ] },
-      { id: 16, isTech: true, category: "CPU Scheduling",
+      { id: 16, hasNonTechOpt: false, category: "CPU Scheduling",
         q: "A quad-core CPU runs four tasks, each requiring 12 seconds of CPU time. A fifth task requires 6 seconds.\nAssuming ideal preemptive scheduling, equal priority, and negligible overhead, what is the minimum completion time for all tasks?",
         options: ["12 seconds", "13.5 seconds", "15 seconds", "18 seconds"] },
-      { id: 17, isTech: true, category: "System Performance",
+      { id: 17, hasNonTechOpt: false, category: "System Performance",
         q: "A computer processes 100 files using two sequential stages:\nStage 1: CPU processing takes 2 seconds per file\nStage 2: Disk writing takes 3 seconds per file\nThe CPU and disk can operate simultaneously on different files, but each stage processes only one file at a time.\n\nWhat is the minimum total time required to process all 100 files?",
         options: ["300 seconds", "302 seconds", "500 seconds", "600 seconds"] },
-      { id: 18, isTech: true, category: "Memory Management",
+      { id: 18, hasNonTechOpt: false, category: "Memory Management",
         q: "A system has 16 GB RAM. The OS uses 4 GB, while three applications require 5 GB, 4 GB, and 6 GB.\nIf all memory must be resident simultaneously, how much additional RAM is required?",
         options: ["2 GB", "3 GB", "4 GB", "5 GB"] },
-      { id: 19, isTech: true, category: "Technical Aptitude",
+      { id: 19, hasNonTechOpt: false, category: "Technical Aptitude",
         q: "A 1,200 MB file transfers at 100 MB/s with 80% efficiency. After 5 seconds, the connection speed halves, but efficiency stays the same.\nWhat is the total transfer time?",
         options: ["20 seconds", "22.5 seconds", "25 seconds", "30 seconds"] },
-      { id: 20, isTech: true, category: "System Troubleshooting",
+      { id: 20, hasNonTechOpt: false, category: "System Troubleshooting",
         q: "A system has the following performance metrics during a large file-processing task:\nCPU utilization: 25%\nRAM utilization: 60%\nDisk utilization: 100%\nNetwork utilization: 15%\n\nThe application is processing files much more slowly than expected. Which action is most likely to improve performance?",
         options: [
           "Upgrade the CPU to a higher clock speed",
@@ -992,19 +1011,20 @@
           "Investigate disk I/O bottlenecks and consider faster storage",
           "Increase network bandwidth"
         ] },
-      { id: 21, isTech: true, category: "Python",
+      // LAST 10 QUESTIONS (Q21-Q30): Include 5th option "Not from a technical background"
+      { id: 21, hasNonTechOpt: true, category: "Python",
         q: "What is the output of the following Python program?\n\na = [1, 2, 3]\nb = a\nb.append(4)\na = a + [5]\nprint(b)",
         options: ["[1, 2, 3, 4, 5]", "[1, 2, 3, 4]", "[1, 2, 3, 5]", "[1, 2, 3]"] },
-      { id: 22, isTech: true, category: "C Programming",
+      { id: 22, hasNonTechOpt: true, category: "C Programming",
         q: "What is the output of the following C code?\n\nint arr[] = {10, 20, 30, 40, 50};\nint *p = arr;\nprintf(\"%d\", *(p + 3) - *(p + 1));",
         options: ["10", "20", "30", "Compilation error"] },
-      { id: 23, isTech: true, category: "Java",
+      { id: 23, hasNonTechOpt: true, category: "Java",
         q: "What is the output of the following Java code?\n\nString a = \"Java\";\nString b = new String(\"Java\");\nString c = \"Ja\" + \"va\";\nSystem.out.println(a == b);\nSystem.out.println(a == c);",
         options: ["true, true", "false, true", "false, false", "true, false"] },
-      { id: 24, isTech: true, category: "Python Recursion",
+      { id: 24, hasNonTechOpt: true, category: "Python Recursion",
         q: "What does the following function return when fun(5) is called?\n\ndef fun(n):\n    if n <= 1:\n        return 1\n    return fun(n - 1) + fun(n - 2)",
         options: ["5", "8", "13", "16"] },
-      { id: 25, isTech: true, category: "Programming Languages",
+      { id: 25, hasNonTechOpt: true, category: "Programming Languages",
         q: "Two programs implement the same algorithm, one in C and the other in Python. The C version runs significantly faster. Which explanation is the most technically accurate?",
         options: [
           "Compiled languages always execute faster than interpreted languages",
@@ -1012,7 +1032,7 @@
           "Execution performance depends on implementation, runtime overhead, optimizations, and the operations performed",
           "Python executes every instruction using multiple CPU cores"
         ] },
-      { id: 26, isTech: true, category: "Object-Oriented Programming",
+      { id: 26, hasNonTechOpt: true, category: "Object-Oriented Programming",
         q: "A base class defines a method calculate(), and a derived class overrides it. A base-class reference points to a derived-class object. In a language supporting runtime polymorphism, which method executes when calculate() is called through that reference?",
         options: [
           "The base-class method because the reference type is the base class",
@@ -1020,7 +1040,7 @@
           "Both methods execute automatically",
           "The compiler rejects the method call"
         ] },
-      { id: 27, isTech: true, category: "Memory Management",
+      { id: 27, hasNonTechOpt: true, category: "Memory Management",
         q: "A programmer creates an object dynamically inside a function and returns a reference to it. Which statement is generally correct for languages with managed heap memory, such as Java?",
         options: [
           "The object is immediately destroyed when the function returns",
@@ -1028,13 +1048,13 @@
           "The object is automatically copied into the caller's stack",
           "Dynamically created objects can never be garbage-collected"
         ] },
-      { id: 28, isTech: true, category: "Data Structures",
+      { id: 28, hasNonTechOpt: true, category: "Data Structures",
         q: "An application must frequently search for user records by unique ID. The records do not need to be sorted. Assuming a well-distributed hash function, which data structure generally provides the best average-case lookup performance?",
         options: ["Unsorted array", "Singly linked list", "Hash table", "Binary search tree without balancing"] },
-      { id: 29, isTech: true, category: "Multithreading",
+      { id: 29, hasNonTechOpt: true, category: "Multithreading",
         q: "Two threads simultaneously execute an operation that increments a shared integer variable by one, without synchronization. The initial value is 0. After both threads finish, what is the possible final value, assuming ordinary non-atomic read-modify-write operations?",
         options: ["Always 2", "Always 1", "Either 1 or 2", "Either 0 or 2"] },
-      { id: 30, isTech: true, category: "Algorithm Complexity",
+      { id: 30, hasNonTechOpt: true, category: "Algorithm Complexity",
         q: "An algorithm uses two nested loops. The outer loop executes n times, while the inner loop executes i times during the ith iteration of the outer loop. What is the overall time complexity?",
         options: ["O(n)", "O(n log n)", "O(n²)", "O(2ⁿ)"] }
     ];
@@ -1042,7 +1062,7 @@
     // =========================================================================
     // STATE VARIABLES
     // =========================================================================
-    var candidate = { name: "", email: "", phone: "", refId: "" };
+    var candidate = { name: "", graduation: "", email: "", phone: "", refId: "" };
     var activeQuestions = [];
     var currentIndex = 0;
     var userResponses = {};
@@ -1208,8 +1228,12 @@
     });
 
     // =========================================================================
-    // SCREEN 1: UNIFIED REGISTRATION & START HANDLER
+    // SCREEN 1: REGISTRATION & GRADUATION INPUT
     // =========================================================================
+    function fillGraduation(val) {
+      document.getElementById("candGraduation").value = val;
+    }
+
     function showRegError(msg) {
       var banner = document.getElementById("regErrorBanner");
       banner.textContent = msg;
@@ -1229,12 +1253,17 @@
 
     function handleStartTest() {
       var nameVal = document.getElementById("candName").value.trim();
+      var gradVal = document.getElementById("candGraduation").value.trim();
       var emailVal = document.getElementById("candEmail").value.trim();
       var phoneVal = document.getElementById("candPhone").value.trim();
       var agreed = document.getElementById("agreeRules").checked;
 
       if (!nameVal) {
         showRegError("Please enter your Full Name.");
+        return;
+      }
+      if (!gradVal) {
+        showRegError("Please enter or select your Graduation / Degree.");
         return;
       }
       if (!emailVal || emailVal.indexOf("@") === -1) {
@@ -1255,23 +1284,24 @@
       var randomCode = Math.floor(1000 + Math.random() * 9000);
       candidate = {
         name: nameVal,
+        graduation: gradVal,
         email: emailVal,
         phone: phoneVal,
         refId: "SL-" + randomCode
       };
 
-      // Shuffle all 30 questions; shuffle options A-D and keep "Not from a technical background" pinned as Option E for tech questions
+      // Shuffle all 30 questions; shuffle options A-D, and append Option E on Q21-Q30
       var shuffledQs = shuffleArray(QUESTION_BANK);
       activeQuestions = [];
       for (var k = 0; k < shuffledQs.length; k++) {
         var item = shuffledQs[k];
         var shuffledOpts = shuffleArray(item.options);
-        if (item.isTech) {
+        if (item.hasNonTechOpt) {
           shuffledOpts.push(NON_TECH_OPTION);
         }
         activeQuestions.push({
           id: item.id,
-          isTech: item.isTech,
+          hasNonTechOpt: item.hasNonTechOpt,
           category: item.category,
           q: item.q,
           options: shuffledOpts
@@ -1443,8 +1473,8 @@
       document.getElementById("progressBarFill").style.width = Math.round(((currentIndex + 1) / total) * 100) + "%";
 
       var catBadge = document.getElementById("qCategoryBadge");
-      catBadge.textContent = qObj.category + (qObj.isTech ? " • Tech" : " • Aptitude");
-      catBadge.className = qObj.isTech ? "cat-tag tech" : "cat-tag";
+      catBadge.textContent = qObj.category + (qObj.hasNonTechOpt ? " • Programming" : "");
+      catBadge.className = qObj.hasNonTechOpt ? "cat-tag prog" : "cat-tag";
 
       document.getElementById("qTextContainer").textContent = qObj.q;
 
@@ -1574,9 +1604,9 @@
         timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
         refId: candidate.refId,
         name: candidate.name,
+        graduation: candidate.graduation,
         email: candidate.email,
         phone: candidate.phone,
-        track: "Learning Designer - Intern",
         status: statusLabel,
         timeTaken: timeTakenStr,
         reason: reasonText,
@@ -1627,7 +1657,7 @@
 
       document.getElementById("receiptName").textContent = payload.name;
       document.getElementById("receiptRefId").textContent = payload.refId;
-      document.getElementById("receiptTrack").textContent = payload.track || "Learning Designer - Intern";
+      document.getElementById("receiptGraduation").textContent = payload.graduation || "-";
       document.getElementById("receiptAttempted").textContent = payload.attemptedCount || "-";
       document.getElementById("backupCodeBox").textContent = generateBackupCode(payload);
     }
