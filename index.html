@@ -45,9 +45,14 @@
           <p class="text-[11px] text-slate-300 leading-tight">Freshers Walk-In Assessment</p>
         </div>
       </div>
-      <div id="headerTimerBadge" style="display: none;" class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-full flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="timerDisplay" class="font-mono text-sm font-bold text-amber-300">30:00</span>
+      <div class="flex items-center gap-2">
+        <div id="strikeBadge" style="display: none;" class="bg-amber-500/20 border border-amber-400/50 px-2.5 py-1 rounded-full text-[11px] font-bold text-amber-300">
+          Warnings: 0/2
+        </div>
+        <div id="headerTimerBadge" style="display: none;" class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-full flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="timerDisplay" class="font-mono text-sm font-bold text-amber-300">30:00</span>
+        </div>
       </div>
     </div>
   </header>
@@ -69,12 +74,12 @@
         <!-- Anti-Cheat Warning Box -->
         <div class="mt-4 bg-red-50 border border-red-200 rounded-xl p-3.5 text-xs text-red-900 space-y-1.5">
           <p class="font-bold text-red-700 flex items-center gap-1.5">
-            <span>⚠️</span> STRICT PROCTORING RULES (READ CAREFULLY)
+            <span>⚠️</span> PROCTORING RULES (3-STRIKE LOCKOUT)
           </p>
           <ul class="list-disc pl-4 space-y-1 text-red-800">
             <li>Keep <strong>Wi-Fi or Mobile Data ON</strong> (do NOT turn on Airplane Mode).</li>
-            <li>Enable <strong>Do Not Disturb (DND)</strong> or mute notifications so incoming calls or pop-ups do not interrupt your screen.</li>
-            <li><strong>Zero Tab/App Switching:</strong> Leaving this browser tab, switching apps, or minimizing the screen will <strong>immediately reject &amp; disqualify</strong> your interview.</li>
+            <li>Enable <strong>Do Not Disturb (DND)</strong> or mute notifications so calls/pop-ups don't interrupt your screen.</li>
+            <li><strong>2 Warnings Max:</strong> Switching tabs/apps or refreshing the page triggers a warning. On the <strong>3rd violation</strong>, your test will permanently lock and your interview will be rejected.</li>
           </ul>
         </div>
 
@@ -120,7 +125,7 @@
           <label class="flex items-start gap-2.5 pt-1 cursor-pointer">
             <input type="checkbox" id="agreeRules" class="mt-0.5 w-4 h-4 rounded text-blue-600 border-slate-300" />
             <span class="text-xs text-slate-600 leading-snug">
-              My internet is ON, notifications are muted, and I understand that switching tabs or apps will automatically disqualify me.
+              My internet is ON, notifications are muted, and I understand that leaving or refreshing this screen 3 times will permanently lock my test.
             </span>
           </label>
 
@@ -226,19 +231,19 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- SCREEN 3B: FULL-SCREEN DISQUALIFICATION LOCK              -->
+    <!-- SCREEN 3B: FULL-SCREEN DISQUALIFICATION LOCK (3RD STRIKE) -->
     <!-- ========================================================= -->
     <section id="screenRejected" style="display: none;" class="fixed inset-0 z-50 bg-red-700 text-white flex flex-col items-center justify-center p-6 text-center">
-      <div class="max-w-md w-full bg-red-800/90 border-2 border-red-400 rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="max-w-md w-full bg-red-800/95 border-2 border-red-400 rounded-2xl p-6 shadow-2xl space-y-4">
         <div class="w-16 h-16 rounded-full bg-white text-red-700 flex items-center justify-center mx-auto text-3xl font-black">
           ✕
         </div>
         <div class="inline-block px-3 py-1 rounded-full bg-red-950 text-red-200 text-xs font-bold tracking-wider uppercase">
-          Interview Rejected
+          Interview Rejected (3/3 Violations)
         </div>
-        <h2 class="text-2xl font-black tracking-tight">ASSESSMENT TERMINATED</h2>
+        <h2 class="text-2xl font-black tracking-tight">ACCESS DISABLED</h2>
         <p id="rejectionReasonText" class="text-sm text-red-100 leading-relaxed">
-          You navigated away from the active assessment screen. As per walk-in proctoring rules, your application has been automatically disqualified.
+          You exceeded the maximum allowed warnings by leaving or refreshing the assessment screen 3 times. Your application has been automatically rejected.
         </p>
         <div class="bg-red-950/80 rounded-xl p-3.5 text-left text-xs space-y-1.5 text-red-200">
           <div><strong>Candidate:</strong> <span id="rejCandName">-</span></div>
@@ -246,12 +251,32 @@
           <div><strong>Status:</strong> Disqualified (Logged to HR)</div>
         </div>
         <p class="text-[11px] text-red-200 pt-1">
-          This device is now locked for this walk-in drive. Please exit the test area.
+          Login is permanently disabled on this device for this walk-in drive.
         </p>
       </div>
     </section>
 
   </main>
+
+  <!-- WARNING MODAL (STRIKES 1 & 2) -->
+  <div id="warningModal" style="display: none;" class="fixed inset-0 z-50 bg-slate-950/80 flex items-center justify-center p-5">
+    <div class="bg-white max-w-sm w-full rounded-2xl p-6 text-center shadow-2xl border-2 border-amber-500 space-y-4">
+      <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-3xl">
+        ⚠️
+      </div>
+      <div id="warningStrikeTitle" class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold uppercase tracking-wide">
+        Warning 1 of 2
+      </div>
+      <h3 class="text-lg font-extrabold text-slate-900">You Might Lose Access!</h3>
+      <p id="warningMessageText" class="text-xs text-slate-600 leading-relaxed">
+        Leaving the page, pulling down notifications, or refreshing is strictly prohibited. On your <strong>3rd attempt</strong>, your login will be permanently disabled and your interview rejected.
+      </p>
+      <button type="button" onclick="acknowledgeWarning()"
+        class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs uppercase tracking-wide shadow-sm">
+        I Understand — Resume Test
+      </button>
+    </div>
+  </div>
 
   <!-- QUESTION NAVIGATOR DRAWER -->
   <div id="questionDrawer" style="display: none;" class="fixed inset-0 z-40 bg-slate-900/60 flex items-end justify-center">
@@ -276,6 +301,8 @@
     // =========================================================================
     var WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxcnildeWJka3_Ry0vJnf77SRzX_38YLiyaU7KeSTjWYAUwsg0kKkS1BXN3A4iWK1fh/exec";
     var LOCK_STORAGE_KEY = "simplilearn_walkin_2026_locked";
+    var SESSION_STORAGE_KEY = "simplilearn_walkin_2026_active_session";
+    var SECRET_RESET_CODE = "1926"; // Use ?reset=1926 in URL to unlock any device
 
     // =========================================================================
     // QUESTION BANK (QUESTIONS & OPTIONS ONLY - GRADED ON GOOGLE SERVERS)
@@ -381,6 +408,9 @@
     var activeQuestions = [];
     var currentIndex = 0;
     var userResponses = {};
+    var warningCount = 0;
+    var isWarningModalOpen = false;
+    var lastViolationTimestamp = 0;
     var isTestRunning = false;
     var proctorArmed = false;
     var startTimeMs = 0;
@@ -388,17 +418,77 @@
     var remainingSeconds = 1800;
 
     // =========================================================================
-    // INITIALIZATION & DEVICE LOCK CHECK
+    // INITIALIZATION, SECRET RESET (?reset=1926) & SESSION RECOVERY
     // =========================================================================
     window.onload = function () {
       try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get("reset") === SECRET_RESET_CODE) {
+          localStorage.removeItem(LOCK_STORAGE_KEY);
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+          // Clean URL bar so candidate doesn't see ?reset=1926
+          window.history.replaceState({}, document.title, window.location.pathname);
+          alert("Device unlocked & reset successfully! Ready for a fresh test.");
+          return;
+        }
+
+        // Check if permanently locked (3 strikes or already submitted)
         var lockedData = localStorage.getItem(LOCK_STORAGE_KEY);
         if (lockedData) {
-          var parsed = JSON.parse(lockedData);
-          showLockedScreen(parsed.name || "Candidate", parsed.refId || "LOCKED", parsed.reason || "Previous attempt was terminated due to leaving the screen.");
+          var parsedLock = JSON.parse(lockedData);
+          showLockedScreen(
+            parsedLock.name || "Candidate",
+            parsedLock.refId || "LOCKED",
+            parsedLock.reason || "Access disabled due to exceeding allowed violations or prior submission."
+          );
+          return;
+        }
+
+        // Check if user refreshed mid-test -> restore progress and count as 1 strike!
+        var savedSessionRaw = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (savedSessionRaw) {
+          var sess = JSON.parse(savedSessionRaw);
+          if (sess && sess.activeQuestions && sess.activeQuestions.length > 0) {
+            selectedTrack = sess.selectedTrack || "Technical";
+            candidate = sess.candidate;
+            activeQuestions = sess.activeQuestions;
+            currentIndex = sess.currentIndex || 0;
+            userResponses = sess.userResponses || {};
+            startTimeMs = sess.startTimeMs || Date.now();
+            remainingSeconds = Math.max(30, sess.remainingSeconds || 1200);
+            warningCount = sess.warningCount || 0;
+
+            isTestRunning = true;
+            document.getElementById("screenRegister").style.display = "none";
+            document.getElementById("screenTest").style.display = "flex";
+            document.getElementById("headerTimerBadge").style.display = "flex";
+            document.getElementById("strikeBadge").style.display = "inline-block";
+
+            renderCurrentQuestion();
+            startCountdownTimer();
+
+            // Count the page refresh as a violation strike!
+            registerViolation("Refreshed or reloaded the test page during an active session.");
+          }
         }
       } catch (e) {}
     };
+
+    function persistActiveSession() {
+      if (!isTestRunning) return;
+      try {
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
+          selectedTrack: selectedTrack,
+          candidate: candidate,
+          activeQuestions: activeQuestions,
+          currentIndex: currentIndex,
+          userResponses: userResponses,
+          startTimeMs: startTimeMs,
+          remainingSeconds: remainingSeconds,
+          warningCount: warningCount
+        }));
+      } catch (e) {}
+    }
 
     // Block right-click & inspection shortcuts during test
     document.addEventListener("contextmenu", function (e) {
@@ -474,7 +564,7 @@
         return;
       }
       if (!agreed) {
-        showRegError("Please tick the checkbox confirming your internet is ON and you agree to the proctoring rules.");
+        showRegError("Please tick the checkbox confirming your internet is ON and you agree to the 3-strike proctoring rules.");
         return;
       }
 
@@ -488,7 +578,6 @@
         refId: "SL-" + randomCode
       };
 
-      // Filter by track and shuffle both questions and options per candidate
       var filtered = [];
       for (var i = 0; i < QUESTION_BANK.length; i++) {
         if (selectedTrack === "Technical" || !QUESTION_BANK[i].techOnly) {
@@ -512,19 +601,22 @@
 
       currentIndex = 0;
       userResponses = {};
+      warningCount = 0;
       isTestRunning = true;
       startTimeMs = Date.now();
       remainingSeconds = selectedTrack === "Technical" ? 30 * 60 : 25 * 60;
 
-      // Switch Screen 1 -> Screen 2
+      updateStrikeBadge();
+      persistActiveSession();
+
       document.getElementById("screenRegister").style.display = "none";
       document.getElementById("screenTest").style.display = "flex";
       document.getElementById("headerTimerBadge").style.display = "flex";
+      document.getElementById("strikeBadge").style.display = "inline-block";
 
       renderCurrentQuestion();
       startCountdownTimer();
 
-      // Arm anti-cheat proctoring after 2 seconds so keyboard dismissal doesn't trigger false positive
       setTimeout(function () {
         if (isTestRunning) {
           proctorArmed = true;
@@ -533,15 +625,60 @@
     }
 
     // =========================================================================
-    // ANTI-CHEAT LOCKDOWN (TAB / APP / WINDOW SWITCH DETECTION)
+    // 3-STRIKE ANTI-CHEAT LOCKDOWN (2 WARNINGS -> 3RD ATTEMPT LOCKS)
     // =========================================================================
-    function triggerDisqualification(reason) {
-      if (!isTestRunning || !proctorArmed) return;
+    function updateStrikeBadge() {
+      var badge = document.getElementById("strikeBadge");
+      badge.textContent = "Warnings: " + warningCount + "/2";
+      if (warningCount > 0) {
+        badge.className = "bg-red-500/30 border border-red-400 px-2.5 py-1 rounded-full text-[11px] font-bold text-red-200";
+      }
+    }
+
+    function registerViolation(reason) {
+      if (!isTestRunning) return;
+
+      // Debounce simultaneous visibilitychange + blur events (within 1.5s) as 1 single strike
+      var now = Date.now();
+      if (now - lastViolationTimestamp < 1500) return;
+      lastViolationTimestamp = now;
+
+      warningCount++;
+      updateStrikeBadge();
+      persistActiveSession();
+
+      if (warningCount <= 2) {
+        // Show Warning Modal (Strike 1 or Strike 2)
+        isWarningModalOpen = true;
+        proctorArmed = false;
+        document.getElementById("warningStrikeTitle").textContent = "Warning " + warningCount + " of 2";
+        document.getElementById("warningMessageText").innerHTML =
+          "<strong>Violation detected:</strong> " + escapeHtml(reason) +
+          "<br><br>You might lose access! On your <strong>3rd violation</strong>, your login will be permanently disabled and your interview rejected.";
+        document.getElementById("warningModal").style.display = "flex";
+      } else {
+        // 3rd Strike -> Permanent Rejection & Lockout
+        triggerPermanentDisqualification("3rd Proctoring Violation: " + reason);
+      }
+    }
+
+    function acknowledgeWarning() {
+      document.getElementById("warningModal").style.display = "none";
+      isWarningModalOpen = false;
+      setTimeout(function () {
+        if (isTestRunning) {
+          proctorArmed = true;
+        }
+      }, 1000);
+    }
+
+    function triggerPermanentDisqualification(reason) {
       isTestRunning = false;
       proctorArmed = false;
       clearInterval(timerInterval);
 
       try {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
         localStorage.setItem(LOCK_STORAGE_KEY, JSON.stringify({
           name: candidate.name,
           refId: candidate.refId,
@@ -550,18 +687,18 @@
       } catch (e) {}
 
       showLockedScreen(candidate.name, candidate.refId, reason);
-      sendResultsToGoogleSheet("DISQUALIFIED (Tab/App Switch)", reason);
+      sendResultsToGoogleSheet("DISQUALIFIED (3 Violations)", reason);
     }
 
     document.addEventListener("visibilitychange", function () {
-      if (document.hidden && isTestRunning && proctorArmed) {
-        triggerDisqualification("Switched browser tab, minimized browser, or opened another app during the test.");
+      if (document.hidden && isTestRunning && proctorArmed && !isWarningModalOpen) {
+        registerViolation("Switched browser tab, minimized browser, or opened another app.");
       }
     });
 
     window.addEventListener("blur", function () {
-      if (isTestRunning && proctorArmed) {
-        triggerDisqualification("Left the active test window or opened an external overlay/notification.");
+      if (isTestRunning && proctorArmed && !isWarningModalOpen) {
+        registerViolation("Left the active test window or opened an external notification/overlay.");
       }
     });
 
@@ -570,7 +707,9 @@
       document.getElementById("screenTest").style.display = "none";
       document.getElementById("screenComplete").style.display = "none";
       document.getElementById("headerTimerBadge").style.display = "none";
+      document.getElementById("strikeBadge").style.display = "none";
       document.getElementById("questionDrawer").style.display = "none";
+      document.getElementById("warningModal").style.display = "none";
 
       document.getElementById("rejCandName").textContent = name;
       document.getElementById("rejRefId").textContent = refId;
@@ -585,6 +724,7 @@
       updateTimerDisplay();
       timerInterval = setInterval(function () {
         remainingSeconds--;
+        if (remainingSeconds % 5 === 0) persistActiveSession();
         if (remainingSeconds <= 0) {
           clearInterval(timerInterval);
           submitFinalAssessment("Time Expired (Auto-Submitted)");
@@ -646,6 +786,7 @@
 
             btn.onclick = function () {
               userResponses[String(qObj.id)] = optText;
+              persistActiveSession();
               renderCurrentQuestion();
             };
             container.appendChild(btn);
@@ -659,6 +800,7 @@
         input.className = "w-full px-4 py-3 text-sm rounded-xl border-2 border-slate-300 focus:outline-none focus:border-blue-600";
         input.oninput = function (e) {
           userResponses[String(qObj.id)] = e.target.value;
+          persistActiveSession();
           var ans = getAnsweredCount();
           document.getElementById("answeredCounterLabel").textContent = ans + " Answered";
           document.getElementById("drawerCountBadge").textContent = ans + "/" + total;
@@ -681,6 +823,7 @@
       var nextIdx = currentIndex + delta;
       if (nextIdx >= 0 && nextIdx < activeQuestions.length) {
         currentIndex = nextIdx;
+        persistActiveSession();
         renderCurrentQuestion();
       }
     }
@@ -708,6 +851,7 @@
           cell.onclick = function () {
             currentIndex = idx;
             toggleDrawer(false);
+            persistActiveSession();
             renderCurrentQuestion();
           };
           grid.appendChild(cell);
@@ -726,14 +870,13 @@
         ? "You have answered " + answered + " out of " + total + " questions. Are you sure you want to submit now?"
         : "Submit your completed assessment now?";
 
-      // Temporarily disarm blur check during native confirm dialog
       proctorArmed = false;
       var ok = window.confirm(msg);
       if (ok) {
-        submitFinalAssessment("Submitted Normally");
+        submitFinalAssessment("Submitted Normally (Warnings: " + warningCount + ")");
       } else {
         setTimeout(function () {
-          if (isTestRunning) proctorArmed = true;
+          if (isTestRunning && !isWarningModalOpen) proctorArmed = true;
         }, 500);
       }
     }
@@ -745,6 +888,7 @@
       clearInterval(timerInterval);
 
       try {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
         localStorage.setItem(LOCK_STORAGE_KEY, JSON.stringify({
           name: candidate.name,
           refId: candidate.refId,
@@ -754,6 +898,7 @@
 
       document.getElementById("screenTest").style.display = "none";
       document.getElementById("headerTimerBadge").style.display = "none";
+      document.getElementById("strikeBadge").style.display = "none";
       document.getElementById("questionDrawer").style.display = "none";
       document.getElementById("screenComplete").style.display = "block";
 
