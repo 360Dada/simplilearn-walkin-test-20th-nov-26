@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Simplilearn | Freshers Walk-In Assessment</title>
+  <title>Simplilearn | Learning Designer - Intern Assessment</title>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -177,6 +177,15 @@
     .rules-box li {
       margin-bottom: 4px;
     }
+    .info-note {
+      margin-top: 10px;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 11.5px;
+      color: #0369a1;
+    }
     .error-banner {
       margin-top: 12px;
       background: #fffbeb;
@@ -198,39 +207,6 @@
       font-weight: 700;
       color: #334155;
       margin-bottom: 6px;
-    }
-    .track-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .track-btn {
-      padding: 12px;
-      border-radius: 12px;
-      border: 2px solid #e2e8f0;
-      background: #ffffff;
-      text-align: left;
-      cursor: pointer;
-    }
-    .track-btn.active {
-      border-color: #2563eb;
-      background: #eff6ff;
-    }
-    .track-btn .t-name {
-      font-size: 13px;
-      font-weight: 800;
-      color: #1e293b;
-    }
-    .track-btn.active .t-name {
-      color: #1e3a8a;
-    }
-    .track-btn .t-meta {
-      font-size: 11px;
-      color: #64748b;
-      margin-top: 2px;
-    }
-    .track-btn.active .t-meta {
-      color: #1d4ed8;
     }
     .input-field {
       width: 100%;
@@ -360,6 +336,10 @@
       color: #475569;
       margin-bottom: 10px;
     }
+    .cat-tag.tech {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
     .q-text {
       font-size: 15px;
       font-weight: 700;
@@ -389,6 +369,17 @@
       border-color: #2563eb;
       background: #eff6ff;
     }
+    .option-card.nontech-opt {
+      border-style: dashed;
+      border-color: #cbd5e1;
+      background: #f8fafc;
+      margin-top: 2px;
+    }
+    .option-card.nontech-opt.selected {
+      border-style: solid;
+      border-color: #0284c7;
+      background: #e0f2fe;
+    }
     .opt-letter {
       width: 26px;
       height: 26px;
@@ -404,6 +395,10 @@
     }
     .option-card.selected .opt-letter {
       background: #2563eb;
+      color: #ffffff;
+    }
+    .option-card.nontech-opt.selected .opt-letter {
+      background: #0284c7;
       color: #ffffff;
     }
     .opt-body {
@@ -630,7 +625,7 @@
         <div class="brand-logo" onclick="handleSecretResetTap()" title="Simplilearn">S</div>
         <div>
           <p class="brand-title">Simplilearn</p>
-          <p class="brand-sub">Freshers Walk-In Assessment</p>
+          <p class="brand-sub">Learning Designer - Intern Assessment</p>
         </div>
       </div>
       <div class="header-badges">
@@ -647,13 +642,13 @@
   <main class="main-wrap">
 
     <!-- ========================================================= -->
-    <!-- SCREEN 1: REGISTRATION & RULES                            -->
+    <!-- SCREEN 1: UNIFIED REGISTRATION & RULES                    -->
     <!-- ========================================================= -->
     <section id="screenRegister" style="display: block;">
       <div class="card">
-        <span class="pill-blue">Content &amp; Creative Hiring Drive</span>
+        <span class="pill-blue">Learning Designer - Intern • 30 Questions • 30 Mins</span>
         <h2>Candidate Registration</h2>
-        <p class="subtext">Complete your details below to begin your timed assessment.</p>
+        <p class="subtext">Enter your details below to begin your timed Technical &amp; Aptitude assessment.</p>
 
         <div class="rules-box">
           <p class="rules-title">⚠️ PROCTORING RULES (3-STRIKE LOCKOUT)</p>
@@ -664,21 +659,11 @@
           </ul>
         </div>
 
-        <div id="regErrorBanner" style="display: none;" class="error-banner"></div>
-
-        <div class="form-group">
-          <label class="label">Select Your Role Track *</label>
-          <div class="track-grid">
-            <button type="button" id="btnTrackTech" class="track-btn active" onclick="selectTrack('Technical')">
-              <div class="t-name">Technical Track</div>
-              <div class="t-meta">30 Qs • 30 Mins</div>
-            </button>
-            <button type="button" id="btnTrackNonTech" class="track-btn" onclick="selectTrack('Non-Technical')">
-              <div class="t-name">Non-Technical</div>
-              <div class="t-meta">24 Qs • 25 Mins</div>
-            </button>
-          </div>
+        <div class="info-note">
+          <strong>Note:</strong> For technical/programming questions, candidates from non-engineering backgrounds may select <em>"Not from a technical background"</em> (Option E).
         </div>
+
+        <div id="regErrorBanner" style="display: none;" class="error-banner"></div>
 
         <div class="form-group">
           <label class="label" for="candName">Full Name *</label>
@@ -764,8 +749,8 @@
             <strong id="receiptRefId" style="font-family: monospace;"></strong>
           </div>
           <div class="summary-row">
-            <span style="color: #64748b;">Track:</span>
-            <strong id="receiptTrack"></strong>
+            <span style="color: #64748b;">Assessment:</span>
+            <strong id="receiptTrack">Learning Designer - Intern</strong>
           </div>
           <div class="summary-row">
             <span style="color: #64748b;">Attempted:</span>
@@ -824,7 +809,7 @@
 
   </main>
 
-  <!-- CUSTOM BRANDED SUBMIT CONFIRMATION MODAL (Replaces default browser popup) -->
+  <!-- CUSTOM BRANDED SUBMIT CONFIRMATION MODAL -->
   <div id="submitConfirmModal" style="display: none;" class="modal-backdrop">
     <div class="modal-box" style="border: 2px solid #2563eb;">
       <div style="width: 48px; height: 48px; border-radius: 14px; background: #eff6ff; color: #2563eb; font-size: 24px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
@@ -916,107 +901,147 @@
     var SESSION_STORAGE_KEY = "simplilearn_walkin_2026_active_session";
     var PENDING_SYNC_KEY = "simplilearn_walkin_2026_pending_sync";
     var SECRET_RESET_CODE = "1926";
+    var NON_TECH_OPTION = "Not from a technical background";
 
     // =========================================================================
-    // QUESTION BANK (QUESTIONS & OPTIONS ONLY - GRADED ON GOOGLE SERVERS)
+    // 30-QUESTION BANK (isTech: true adds 5th option "Not from a technical background")
     // =========================================================================
     var QUESTION_BANK = [
-      { id: 1, techOnly: false, category: "Aptitude", type: "mcq",
-        q: "If 4 employees upload 80 videos in 5 hours, how many videos can 2 employees upload in the same time, assuming equal productivity?",
-        options: ["20 videos", "40 videos", "60 videos", "80 videos"] },
-      { id: 2, techOnly: false, category: "Logical Reasoning", type: "mcq",
-        q: "Find the next number in the sequence: 5, 10, 20, 40, ___",
-        options: ["45", "60", "80", "100"] },
-      { id: 3, techOnly: false, category: "Aptitude", type: "text",
-        q: "A course has 6 lessons, and each lesson contains 8 videos. If 5 videos are missing, how many videos are available?",
-        placeholder: "Type your answer (e.g., 43 videos)" },
-      { id: 4, techOnly: false, category: "Content QC", type: "mcq",
-        q: "The original course title is \"Advanced Excel for Business Analytics\", but the uploaded title is \"Advanced Excel for Business Analytic\". What should you do?",
-        options: ["Ignore the difference", "Change both titles", "Correct the uploaded title to match the approved original", "Delete the course"] },
-      { id: 5, techOnly: false, category: "Excel", type: "mcq",
-        q: "Which Excel feature is used to arrange a list of video durations from shortest to longest?",
-        options: ["Sort", "Merge Cells", "Wrap Text", "Freeze Panes"] },
-      { id: 6, techOnly: false, category: "Aptitude", type: "mcq",
-        q: "An intern completes 12 tasks in 3 hours. At the same rate, how many tasks can the intern complete in 7 hours?",
-        options: ["21 tasks", "24 tasks", "28 tasks", "36 tasks"] },
-      { id: 7, techOnly: false, category: "Aptitude", type: "mcq",
-        q: "A team has 120 videos to upload. If 40% of the videos are uploaded in the morning, how many videos are remaining?",
-        options: ["48 videos", "60 videos", "72 videos", "80 videos"] },
-      { id: 8, techOnly: false, category: "Excel", type: "mcq",
-        q: "Cells B2 to B6 contain the number of videos in five lessons. Which formula calculates the total number of videos?",
-        options: ["=COUNT(B2:B6)", "=SUM(B2:B6)", "=MAX(B2:B6)", "=AVERAGE(B2:B6)"] },
-      { id: 9, techOnly: false, category: "Excel", type: "mcq",
-        q: "You are reviewing an Excel tracker and notice that some Course IDs are repeated. Which Excel feature can help highlight duplicate values?",
-        options: ["Conditional Formatting", "Freeze Panes", "Page Layout", "Wrap Text"] },
-      { id: 10, techOnly: false, category: "PowerPoint", type: "mcq",
-        q: "You are preparing a presentation and want to maintain the same logo position, font style, and colors across multiple slides. Which PowerPoint feature is most appropriate?",
-        options: ["Animations", "Slide Master", "Slide Show", "Speaker Notes"] },
-      { id: 11, techOnly: false, category: "PowerPoint", type: "mcq",
-        q: "You notice that several icons on a PowerPoint slide are unevenly positioned and have different sizes. What should you do?",
-        options: ["Adjust each icon approximately by looking at it", "Use Align, Distribute, and Size options", "Increase the font size of the slide", "Add more icons to fill the empty space"] },
-      { id: 12, techOnly: false, category: "Excel", type: "mcq",
-        q: "An Excel tracker contains 200 video records. You want to display only the videos marked as \"Pending\". Which Excel feature should you use?",
-        options: ["Filter", "Merge Cells", "Protect Sheet", "Find and Replace All"] },
-      { id: 13, techOnly: false, category: "Data Verification", type: "mcq",
-        q: "Two course trackers contain the following Lesson IDs:\nTracker A: 101, 102, 103, 104, 105\nTracker B: 101, 102, 104, 105\nWhich Lesson ID is missing from Tracker B?",
-        options: ["101", "102", "103", "105"] },
-      { id: 14, techOnly: true, category: "Python", type: "text",
-        q: "What will be the output of the following Python code?\n\nx = 10\nfor i in range(1, 4):\n    x = x + i\nprint(x)",
-        placeholder: "Enter exact output" },
-      { id: 15, techOnly: true, category: "Python", type: "text",
-        q: "What will be the output of the following Python code?\n\na = 15\nb = 10\nif a > b and b > 5:\n    print(\"Success\")\nelse:\n    print(\"Failure\")",
-        placeholder: "Enter exact output" },
-      { id: 16, techOnly: true, category: "Digital Logic", type: "mcq",
-        q: "What is the decimal equivalent of the binary number 10110?",
-        options: ["20", "21", "22", "24"] },
-      { id: 17, techOnly: true, category: "Digital Logic", type: "mcq",
-        q: "An AND gate has two inputs. Under which condition will its output be 1?",
-        options: ["Both inputs are 0", "Either one input is 1", "Both inputs are 1", "Both inputs are different"] },
-      { id: 18, techOnly: false, category: "IT Basics", type: "mcq",
-        q: "A computer takes significantly longer than usual to process and open large files. Which of the following could be a possible reason?",
-        options: ["Insufficient RAM", "Very little free storage space", "Too many background applications", "All of the above"] },
-      { id: 19, techOnly: false, category: "Excel", type: "mcq",
-        q: "An Excel sheet contains the following values:\nCell A2: 75 completed tasks\nCell B2: 100 total tasks\nWhich formula calculates the completion percentage?",
-        options: ["=A2+B2", "=A2/B2", "=B2-A2", "=A2*B2"] },
-      { id: 20, techOnly: false, category: "Content QC", type: "mcq",
-        q: "You have completed uploading a course, but during verification, you discover that one video has no audio. What should you do?",
-        options: ["Mark the course as completed", "Ignore the issue because the video is uploaded", "Report the issue, arrange a corrected video, verify it, and then complete the task", "Delete all uploaded videos"] },
-      { id: 21, techOnly: false, category: "Aptitude", type: "mcq",
-        q: "A team of 6 employees can upload 180 videos in 5 hours. Due to a system issue, 2 employees become unavailable. How many hours will the remaining employees take to upload 180 videos, assuming equal productivity?",
-        options: ["6 hours", "7.5 hours", "9 hours", "10 hours"] },
-      { id: 22, techOnly: false, category: "Aptitude", type: "mcq",
-        q: "A team is assigned 200 videos to upload over five days. They complete 30% on Day 1, 25% on Day 2, and 20% on Day 3, all calculated from the original total of 200 videos. How many videos are still pending after Day 3?",
-        options: ["25 videos", "40 videos", "50 videos", "75 videos"] },
-      { id: 23, techOnly: false, category: "Excel", type: "mcq",
-        q: "Column A contains expected Video IDs, and Column B contains uploaded Video IDs. Which Excel formula can be entered in C2 to check whether the Video ID in A2 is missing from Column B?",
-        options: ["=SUM(A2:B2)", "=IF(COUNTIF(B:B,A2)=0,\"Missing\", \"Found\")", "=AVERAGE(A2:B2)", "=LEN(A2)"] },
-      { id: 24, techOnly: false, category: "Content QC", type: "mcq",
-        q: "You have converted a PowerPoint presentation into Google Slides. After conversion, you notice that some text boxes have shifted and a few elements overlap. What is the best approach?",
-        options: ["Ignore the issue because the original PowerPoint is correct", "Check only the first slide", "Review all converted slides and correct alignment, text wrapping, and overlapping elements", "Delete all slides containing alignment issues"] },
-      { id: 25, techOnly: false, category: "Work Prioritization", type: "mcq",
-        q: "You have three assignments to complete before the end of the day:\n- Upload 15 videos: 2 hours\n- Review 20 PowerPoint slides: 1 hour\n- Verify 10 course lessons: 2 hours\nYou have only 4 hours remaining. What is the most effective approach?",
-        options: ["Promise to complete everything without informing the team lead", "Skip quality checks to finish faster", "Prioritize tasks based on urgency and impact, complete the most important work, and inform the team lead about the expected delay", "Start all three tasks simultaneously without planning"] },
-      { id: 26, techOnly: false, category: "Aptitude", type: "mcq",
-        q: "Two machines can independently complete the same task in 12 hours and 18 hours, respectively. If both machines work together at constant rates, how long will they take to complete the task?",
-        options: ["6.5 hours", "7.2 hours", "8 hours", "9 hours"] },
-      { id: 27, techOnly: true, category: "Python", type: "text",
-        q: "What will be the output of the following Python code?\n\nx = 20\nwhile x > 5:\n    x = x - 5\nprint(x)",
-        placeholder: "Enter exact output" },
-      { id: 28, techOnly: true, category: "Python", type: "text",
-        q: "What will be the output of the following Python code?\n\nnumbers = [10, 20, 30, 40, 50]\nfor i in range(len(numbers)):\nif numbers[i] == 30:\nprint(\"Found\")",
-        placeholder: "Enter exact output" },
-      { id: 29, techOnly: false, category: "Data Verification", type: "mcq",
-        q: "A course management system contains 500 course records. Each record must have a unique Course ID. Before uploading the records, you need to check for duplicate Course IDs. Which approach would be most appropriate?",
-        options: ["Sort the records alphabetically by course title", "Compare Course IDs and identify repeated values", "Delete records with longer course titles", "Change all Course IDs without checking for duplicates"] },
-      { id: 30, techOnly: false, category: "Content QC", type: "mcq",
-        q: "You are assigned a course containing 30 topics, but the content folder contains only 27 video files. Your team lead asks you to complete the course upload by the end of the day. What is the most appropriate action?",
-        options: ["Upload the 27 videos and mark the course complete", "Create three empty video placeholders and mark the course complete", "Compare the approved content list with the available files, identify the three missing videos, inform the team lead, request the missing files, and keep the completion status pending until verification", "Remove three topics from the approved content list to match the available videos"] }
+      { id: 1, isTech: true, category: "Operating Systems",
+        q: "A computer has 8 GB RAM, but running applications require 12 GB of memory. How does the OS handle this?",
+        options: ["CPU cache expansion", "Dynamic RAM allocation", "Virtual memory and paging", "Process scheduling"] },
+      { id: 2, isTech: false, category: "Quantitative Aptitude",
+        q: "A dataset has 10 values with an average of 20. If a value of 50 is removed, what is the new average?",
+        options: ["16.67", "15.00", "17.50", "18.33"] },
+      { id: 3, isTech: true, category: "SQL & Databases",
+        q: "An Employees table has 100 rows, including 20 NULL salaries and 10 salaries equal to zero. What does this query return?\n\nSELECT COUNT(salary) FROM Employees;",
+        options: ["70", "90", "100", "80"] },
+      { id: 4, isTech: true, category: "Databases (ACID)",
+        q: "Two transactions update the same record simultaneously. Which ACID property primarily controls their interaction?",
+        options: ["Atomicity", "Isolation", "Consistency", "Durability"] },
+      { id: 5, isTech: true, category: "Machine Learning",
+        q: "An ML model achieves 99% training accuracy but only 65% test accuracy. What is the most likely issue, assuming comparable datasets?",
+        options: ["High bias", "Underfitting", "Overfitting", "Poor convergence"] },
+      { id: 6, isTech: true, category: "Generative AI",
+        q: "An AI chatbot confidently generates fabricated facts and nonexistent references. What is this called?",
+        options: ["Hallucination", "Model bias", "Knowledge distillation", "Context truncation"] },
+      { id: 7, isTech: false, category: "Analytical Reasoning",
+        q: "Which prompt is most likely to produce an accurate, source-grounded technical summary?",
+        options: [
+          "Summarize in five bullets and add relevant background",
+          "Summarize key findings concisely",
+          "Summarize five findings and fill missing details",
+          "Summarize five findings using only the source; flag missing details"
+        ] },
+      { id: 8, isTech: true, category: "Algorithms",
+        q: "What is the worst-case time complexity of binary search on a sorted array?",
+        options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"] },
+      { id: 9, isTech: true, category: "Computer Networks",
+        q: "A website works through its IP address but fails through its domain name. Which component should be checked first?",
+        options: ["TCP", "HTTP", "DNS", "Network adapter"] },
+      { id: 10, isTech: true, category: "Software Testing",
+        q: "An application accepts ages from 18 to 60, inclusive. Which set is most suitable for boundary-value testing?",
+        options: ["18, 19, 59, 60", "17, 19, 59, 61", "16, 18, 60, 62", "17, 18, 60, 61"] },
+      { id: 11, isTech: false, category: "Logical Reasoning",
+        q: "A software testing team reports:\n\"All critical bugs must be resolved before deployment. Some non-critical bugs may remain unresolved if they do not affect core functionality. The current build has no critical bugs, but three non-critical bugs remain.\"\n\nWhich conclusion is most accurate?",
+        options: [
+          "The build is ready for deployment because no critical bugs remain",
+          "The build can be considered for deployment if the remaining bugs do not affect core functionality",
+          "The build is functionally stable because only non-critical bugs remain",
+          "The build requires all remaining bugs to be fixed before deployment"
+        ] },
+      { id: 12, isTech: false, category: "Quantitative Aptitude",
+        q: "Find the next value in the sequence:\n2, 6, 12, 20, 30, 42, ___",
+        options: ["54", "58", "56", "60"] },
+      { id: 13, isTech: false, category: "Quantitative Aptitude",
+        q: "Two servers have processing capacities in the ratio 3:5. Server A's capacity increases by 40%, and Server B's by 20%.\nWhat is the new ratio?",
+        options: ["7:10", "7:9", "3:4", "4:5"] },
+      { id: 14, isTech: false, category: "Quantitative Aptitude",
+        q: "Two servers transfer a 900 MB file at 30 MB/s and 45 MB/s, respectively. Server B starts 10 seconds later.\nWhich statement is correct?",
+        options: [
+          "Server A finishes 5 seconds earlier",
+          "Both servers finish simultaneously",
+          "Server B finishes 5 seconds earlier",
+          "Server B finishes 10 seconds earlier"
+        ] },
+      { id: 15, isTech: false, category: "Quantitative Aptitude",
+        q: "A company spends ₹80,000 per month on cloud infrastructure.\nAfter optimization, the monthly cost decreases by 25%. Due to increased usage, the optimized cost subsequently increases by 20%.\nWhat is the final monthly cost, and what is the overall percentage change from the original cost?",
+        options: [
+          "₹72,000; 10% decrease",
+          "₹76,000; 5% decrease",
+          "₹80,000; no change",
+          "₹84,000; 5% increase"
+        ] },
+      { id: 16, isTech: true, category: "CPU Scheduling",
+        q: "A quad-core CPU runs four tasks, each requiring 12 seconds of CPU time. A fifth task requires 6 seconds.\nAssuming ideal preemptive scheduling, equal priority, and negligible overhead, what is the minimum completion time for all tasks?",
+        options: ["12 seconds", "13.5 seconds", "15 seconds", "18 seconds"] },
+      { id: 17, isTech: true, category: "System Performance",
+        q: "A computer processes 100 files using two sequential stages:\nStage 1: CPU processing takes 2 seconds per file\nStage 2: Disk writing takes 3 seconds per file\nThe CPU and disk can operate simultaneously on different files, but each stage processes only one file at a time.\n\nWhat is the minimum total time required to process all 100 files?",
+        options: ["300 seconds", "302 seconds", "500 seconds", "600 seconds"] },
+      { id: 18, isTech: true, category: "Memory Management",
+        q: "A system has 16 GB RAM. The OS uses 4 GB, while three applications require 5 GB, 4 GB, and 6 GB.\nIf all memory must be resident simultaneously, how much additional RAM is required?",
+        options: ["2 GB", "3 GB", "4 GB", "5 GB"] },
+      { id: 19, isTech: true, category: "Technical Aptitude",
+        q: "A 1,200 MB file transfers at 100 MB/s with 80% efficiency. After 5 seconds, the connection speed halves, but efficiency stays the same.\nWhat is the total transfer time?",
+        options: ["20 seconds", "22.5 seconds", "25 seconds", "30 seconds"] },
+      { id: 20, isTech: true, category: "System Troubleshooting",
+        q: "A system has the following performance metrics during a large file-processing task:\nCPU utilization: 25%\nRAM utilization: 60%\nDisk utilization: 100%\nNetwork utilization: 15%\n\nThe application is processing files much more slowly than expected. Which action is most likely to improve performance?",
+        options: [
+          "Upgrade the CPU to a higher clock speed",
+          "Increase the system's RAM from 16 GB to 32 GB",
+          "Investigate disk I/O bottlenecks and consider faster storage",
+          "Increase network bandwidth"
+        ] },
+      { id: 21, isTech: true, category: "Python",
+        q: "What is the output of the following Python program?\n\na = [1, 2, 3]\nb = a\nb.append(4)\na = a + [5]\nprint(b)",
+        options: ["[1, 2, 3, 4, 5]", "[1, 2, 3, 4]", "[1, 2, 3, 5]", "[1, 2, 3]"] },
+      { id: 22, isTech: true, category: "C Programming",
+        q: "What is the output of the following C code?\n\nint arr[] = {10, 20, 30, 40, 50};\nint *p = arr;\nprintf(\"%d\", *(p + 3) - *(p + 1));",
+        options: ["10", "20", "30", "Compilation error"] },
+      { id: 23, isTech: true, category: "Java",
+        q: "What is the output of the following Java code?\n\nString a = \"Java\";\nString b = new String(\"Java\");\nString c = \"Ja\" + \"va\";\nSystem.out.println(a == b);\nSystem.out.println(a == c);",
+        options: ["true, true", "false, true", "false, false", "true, false"] },
+      { id: 24, isTech: true, category: "Python Recursion",
+        q: "What does the following function return when fun(5) is called?\n\ndef fun(n):\n    if n <= 1:\n        return 1\n    return fun(n - 1) + fun(n - 2)",
+        options: ["5", "8", "13", "16"] },
+      { id: 25, isTech: true, category: "Programming Languages",
+        q: "Two programs implement the same algorithm, one in C and the other in Python. The C version runs significantly faster. Which explanation is the most technically accurate?",
+        options: [
+          "Compiled languages always execute faster than interpreted languages",
+          "Python cannot directly access computer memory",
+          "Execution performance depends on implementation, runtime overhead, optimizations, and the operations performed",
+          "Python executes every instruction using multiple CPU cores"
+        ] },
+      { id: 26, isTech: true, category: "Object-Oriented Programming",
+        q: "A base class defines a method calculate(), and a derived class overrides it. A base-class reference points to a derived-class object. In a language supporting runtime polymorphism, which method executes when calculate() is called through that reference?",
+        options: [
+          "The base-class method because the reference type is the base class",
+          "The derived-class method because the actual object determines method dispatch",
+          "Both methods execute automatically",
+          "The compiler rejects the method call"
+        ] },
+      { id: 27, isTech: true, category: "Memory Management",
+        q: "A programmer creates an object dynamically inside a function and returns a reference to it. Which statement is generally correct for languages with managed heap memory, such as Java?",
+        options: [
+          "The object is immediately destroyed when the function returns",
+          "The object remains accessible while reachable through a valid reference",
+          "The object is automatically copied into the caller's stack",
+          "Dynamically created objects can never be garbage-collected"
+        ] },
+      { id: 28, isTech: true, category: "Data Structures",
+        q: "An application must frequently search for user records by unique ID. The records do not need to be sorted. Assuming a well-distributed hash function, which data structure generally provides the best average-case lookup performance?",
+        options: ["Unsorted array", "Singly linked list", "Hash table", "Binary search tree without balancing"] },
+      { id: 29, isTech: true, category: "Multithreading",
+        q: "Two threads simultaneously execute an operation that increments a shared integer variable by one, without synchronization. The initial value is 0. After both threads finish, what is the possible final value, assuming ordinary non-atomic read-modify-write operations?",
+        options: ["Always 2", "Always 1", "Either 1 or 2", "Either 0 or 2"] },
+      { id: 30, isTech: true, category: "Algorithm Complexity",
+        q: "An algorithm uses two nested loops. The outer loop executes n times, while the inner loop executes i times during the ith iteration of the outer loop. What is the overall time complexity?",
+        options: ["O(n)", "O(n log n)", "O(n²)", "O(2ⁿ)"] }
     ];
 
     // =========================================================================
     // STATE VARIABLES
     // =========================================================================
-    var selectedTrack = "Technical";
     var candidate = { name: "", email: "", phone: "", refId: "" };
     var activeQuestions = [];
     var currentIndex = 0;
@@ -1033,7 +1058,6 @@
     var retrySyncInterval = null;
     var remainingSeconds = 1800;
 
-    // Secret 5-tap reset variables
     var secretTapCount = 0;
     var secretTapTimer = null;
 
@@ -1086,7 +1110,6 @@
         if (savedSessionRaw) {
           var sess = JSON.parse(savedSessionRaw);
           if (sess && sess.activeQuestions && sess.activeQuestions.length > 0) {
-            selectedTrack = sess.selectedTrack || "Technical";
             candidate = sess.candidate;
             activeQuestions = sess.activeQuestions;
             currentIndex = sess.currentIndex || 0;
@@ -1126,7 +1149,6 @@
       if (!isTestRunning) return;
       try {
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
-          selectedTrack: selectedTrack,
           candidate: candidate,
           activeQuestions: activeQuestions,
           currentIndex: currentIndex,
@@ -1186,21 +1208,8 @@
     });
 
     // =========================================================================
-    // SCREEN 1: TRACK SELECTION & START HANDLER
+    // SCREEN 1: UNIFIED REGISTRATION & START HANDLER
     // =========================================================================
-    function selectTrack(track) {
-      selectedTrack = track;
-      var btnTech = document.getElementById("btnTrackTech");
-      var btnNonTech = document.getElementById("btnTrackNonTech");
-      if (track === "Technical") {
-        btnTech.className = "track-btn active";
-        btnNonTech.className = "track-btn";
-      } else {
-        btnNonTech.className = "track-btn active";
-        btnTech.className = "track-btn";
-      }
-    }
-
     function showRegError(msg) {
       var banner = document.getElementById("regErrorBanner");
       banner.textContent = msg;
@@ -1251,24 +1260,21 @@
         refId: "SL-" + randomCode
       };
 
-      var filtered = [];
-      for (var i = 0; i < QUESTION_BANK.length; i++) {
-        if (selectedTrack === "Technical" || !QUESTION_BANK[i].techOnly) {
-          filtered.push(QUESTION_BANK[i]);
-        }
-      }
-
-      var shuffledQs = shuffleArray(filtered);
+      // Shuffle all 30 questions; shuffle options A-D and keep "Not from a technical background" pinned as Option E for tech questions
+      var shuffledQs = shuffleArray(QUESTION_BANK);
       activeQuestions = [];
       for (var k = 0; k < shuffledQs.length; k++) {
         var item = shuffledQs[k];
+        var shuffledOpts = shuffleArray(item.options);
+        if (item.isTech) {
+          shuffledOpts.push(NON_TECH_OPTION);
+        }
         activeQuestions.push({
           id: item.id,
+          isTech: item.isTech,
           category: item.category,
-          type: item.type,
           q: item.q,
-          placeholder: item.placeholder || "",
-          options: item.type === "mcq" ? shuffleArray(item.options) : []
+          options: shuffledOpts
         });
       }
 
@@ -1277,7 +1283,7 @@
       warningCount = 0;
       isTestRunning = true;
       startTimeMs = Date.now();
-      remainingSeconds = selectedTrack === "Technical" ? 30 * 60 : 25 * 60;
+      remainingSeconds = 30 * 60;
 
       updateStrikeBadge();
       persistActiveSession();
@@ -1436,48 +1442,38 @@
       document.getElementById("drawerCountBadge").textContent = answered + "/" + total;
       document.getElementById("progressBarFill").style.width = Math.round(((currentIndex + 1) / total) * 100) + "%";
 
-      document.getElementById("qCategoryBadge").textContent = qObj.category;
+      var catBadge = document.getElementById("qCategoryBadge");
+      catBadge.textContent = qObj.category + (qObj.isTech ? " • Tech" : " • Aptitude");
+      catBadge.className = qObj.isTech ? "cat-tag tech" : "cat-tag";
+
       document.getElementById("qTextContainer").textContent = qObj.q;
 
       var container = document.getElementById("qOptionsContainer");
       container.innerHTML = "";
       var savedAnswer = userResponses[String(qObj.id)] || "";
 
-      if (qObj.type === "mcq") {
-        var labels = ["A", "B", "C", "D"];
-        for (var i = 0; i < qObj.options.length; i++) {
-          (function (optText, optLabel) {
-            var isSelected = savedAnswer === optText;
-            var btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "option-card" + (isSelected ? " selected" : "");
+      var labels = ["A", "B", "C", "D", "E"];
+      for (var i = 0; i < qObj.options.length; i++) {
+        (function (optText, optLabel) {
+          var isSelected = savedAnswer === optText;
+          var isNonTechOpt = optText === NON_TECH_OPTION;
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "option-card" +
+            (isNonTechOpt ? " nontech-opt" : "") +
+            (isSelected ? " selected" : "");
 
-            btn.innerHTML =
-              '<span class="opt-letter">' + optLabel + '</span>' +
-              '<span class="opt-body">' + escapeHtml(optText) + '</span>';
+          btn.innerHTML =
+            '<span class="opt-letter">' + optLabel + '</span>' +
+            '<span class="opt-body">' + escapeHtml(optText) + '</span>';
 
-            btn.onclick = function () {
-              userResponses[String(qObj.id)] = optText;
-              persistActiveSession();
-              renderCurrentQuestion();
-            };
-            container.appendChild(btn);
-          })(qObj.options[i], labels[i]);
-        }
-      } else {
-        var input = document.createElement("input");
-        input.type = "text";
-        input.value = savedAnswer;
-        input.placeholder = qObj.placeholder || "Type your answer here...";
-        input.className = "input-field";
-        input.oninput = function (e) {
-          userResponses[String(qObj.id)] = e.target.value;
-          persistActiveSession();
-          var ans = getAnsweredCount();
-          document.getElementById("answeredCounterLabel").textContent = ans + " Answered";
-          document.getElementById("drawerCountBadge").textContent = ans + "/" + total;
-        };
-        container.appendChild(input);
+          btn.onclick = function () {
+            userResponses[String(qObj.id)] = optText;
+            persistActiveSession();
+            renderCurrentQuestion();
+          };
+          container.appendChild(btn);
+        })(qObj.options[i], labels[i]);
       }
 
       document.getElementById("btnPrevQ").disabled = (currentIndex === 0);
@@ -1546,7 +1542,7 @@
           "You still have <strong>" + unanswered + " unanswered question" + (unanswered > 1 ? "s" : "") + "</strong>. Once submitted, you cannot edit your responses.";
       } else {
         document.getElementById("submitModalSubtext").textContent =
-          "All questions answered! Once submitted, your responses will be locked and sent to the Simplilearn hiring panel.";
+          "All 30 questions answered! Once submitted, your responses will be locked and sent to the Simplilearn hiring panel.";
       }
 
       isSubmitModalOpen = true;
@@ -1580,7 +1576,7 @@
         name: candidate.name,
         email: candidate.email,
         phone: candidate.phone,
-        track: selectedTrack,
+        track: "Learning Designer - Intern",
         status: statusLabel,
         timeTaken: timeTakenStr,
         reason: reasonText,
@@ -1631,7 +1627,7 @@
 
       document.getElementById("receiptName").textContent = payload.name;
       document.getElementById("receiptRefId").textContent = payload.refId;
-      document.getElementById("receiptTrack").textContent = payload.track;
+      document.getElementById("receiptTrack").textContent = payload.track || "Learning Designer - Intern";
       document.getElementById("receiptAttempted").textContent = payload.attemptedCount || "-";
       document.getElementById("backupCodeBox").textContent = generateBackupCode(payload);
     }
