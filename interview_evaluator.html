@@ -7,13 +7,25 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: #f1f5f9;
       color: #0f172a;
     }
+
+    /* Immediate Blur Security Gate */
+    #appShell.locked-blur {
+      filter: blur(22px);
+      -webkit-filter: blur(22px);
+      pointer-events: none;
+      user-select: none;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    /* Custom Range Sliders */
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
@@ -43,6 +55,7 @@
     input[type="range"].emerald-slider::-webkit-slider-thumb {
       background: #059669;
     }
+
     @keyframes pulse-ring {
       0% { transform: scale(0.95); opacity: 0.9; }
       70% { transform: scale(1.25); opacity: 0; }
@@ -62,474 +75,600 @@
 <body class="min-h-screen flex flex-col">
 
   <!-- ===================================================================== -->
-  <!-- TOP STICKY HEADER & MULTI-PANEL SELECTOR BAR                          -->
+  <!-- FULL-SCREEN FROSTED BLUR LOCK OVERLAY (VISIBLE BY DEFAULT ON LOAD)    -->
   <!-- ===================================================================== -->
-  <header class="bg-[#0f172a] text-white sticky top-0 z-40 shadow-lg border-b border-slate-800">
-    <!-- Top Row: Brand, 10-Min Countdown Timer & Sheet Sync -->
-    <div class="max-w-[1440px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-      <!-- Brand + Active Panel Badge -->
-      <div class="flex items-center gap-3">
-        <div id="brandLogoBox" class="w-10 h-10 rounded-xl bg-[#2563eb] flex items-center justify-center font-extrabold text-xl shadow-inner transition-colors">
-          S
-        </div>
+  <div id="pinLockOverlay" style="display: flex;" class="fixed inset-0 z-[100] bg-slate-950/75 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-5">
+      <div class="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-2xl mx-auto shadow-lg">
+        🔒
+      </div>
+      <div>
+        <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-extrabold uppercase tracking-wider">
+          Simplilearn Hiring Panel Access
+        </span>
+        <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">Panel Evaluator Lock</h2>
+        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+          Authorized interviewers only. Enter the Panel Access PIN to unblur the evaluation workspace and sync candidate records.
+        </p>
+      </div>
+
+      <div class="space-y-3 text-left">
         <div>
-          <div class="flex flex-wrap items-center gap-2">
-            <h1 class="text-base sm:text-lg font-extrabold tracking-tight">Simplilearn F2F Panel</h1>
-            <span id="headerPanelBadge" class="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/40">
-              Panel 1
-            </span>
-          </div>
-          <p class="text-[11px] text-slate-400">10-Min Structured Interview • 4-Dataset Composite Evaluator</p>
+          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-1">Panel Access PIN</label>
+          <input type="password" id="pinUnlockInput" inputmode="numeric" maxlength="10" placeholder="Enter PIN (e.g., 1926)"
+            onkeydown="if(event.key==='Enter') verifyAndUnlockPanel()"
+            class="w-full px-4 py-3 text-center text-lg font-mono font-extrabold tracking-[0.35em] rounded-2xl border-2 border-slate-300 focus:border-blue-600 outline-none bg-slate-50 focus:bg-white" />
         </div>
-      </div>
 
-      <!-- Live 10-Minute Pacing Timer -->
-      <div class="flex items-center gap-2 sm:gap-3 bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-2xl">
-        <div class="flex flex-col">
-          <div class="flex items-center gap-2">
-            <span id="timerPhaseBadge" class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              Phase 1: Intro &amp; Company (0–3m)
-            </span>
-            <span id="timerDisplay" class="font-mono text-xl sm:text-2xl font-extrabold text-amber-400 tracking-wider">
-              10:00
-            </span>
-          </div>
-          <div class="w-full h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
-            <div id="timerProgressBar" class="h-full bg-emerald-400 transition-all duration-500" style="width: 100%;"></div>
-          </div>
-        </div>
-        <div class="flex items-center gap-1.5 pl-2 border-l border-slate-700">
-          <button id="btnTimerToggle" onclick="toggleTimer()" class="px-3 py-1.5 rounded-xl bg-[#2563eb] hover:bg-blue-500 text-xs font-bold transition shadow">
-            Start 10m
-          </button>
-          <button onclick="resetTimer()" title="Reset 10:00 Timer" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
-            ↺
-          </button>
-        </div>
-      </div>
+        <details class="text-xs text-slate-500 bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+          <summary class="cursor-pointer font-bold text-slate-700">⚙️ Google Apps Script Web App URL</summary>
+          <input type="text" id="lockScreenWebhookInput" placeholder="https://script.google.com/macros/s/.../exec"
+            class="mt-2 w-full px-2.5 py-1.5 text-[11px] font-mono rounded-lg border border-slate-300 bg-white text-slate-700" />
+        </details>
 
-      <!-- Sync & Export Controls -->
-      <div class="flex items-center gap-2">
-        <button id="btnHeaderSyncSheet" onclick="fetchCandidatesFromGoogleSheet(false)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-emerald-300 transition flex items-center gap-1.5">
-          <span>🔄 Sync Sheet</span>
+        <div id="pinErrorBanner" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold text-center">
+          Invalid PIN or unable to reach Google Sheet.
+        </div>
+
+        <button type="button" id="btnUnlockPanel" onclick="verifyAndUnlockPanel()"
+          class="w-full py-3.5 px-5 rounded-2xl bg-[#0f172a] hover:bg-blue-700 text-white text-sm font-extrabold shadow-lg transition flex items-center justify-center gap-2">
+          <span>🔓 Unlock Panel &amp; Load Sheet</span>
         </button>
-        <button onclick="openQuickWalkInModal()" class="px-3 py-2 rounded-xl bg-[#2563eb] hover:bg-blue-500 text-xs font-bold text-white transition shadow">
-          + Walk-In Entry
-        </button>
-        <button onclick="openWeightModal()" class="hidden sm:inline-flex px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition">
-          ⚖️ Weights
+
+        <button type="button" id="btnOfflineFallbackUnlock" onclick="unlockOfflineFallback()"
+          class="hidden w-full py-2.5 px-4 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-extrabold transition">
+          ⚠️ Network Unreachable — Unlock Offline Mode
         </button>
       </div>
+
+      <p class="text-[11px] text-slate-400">
+        PIN is verified directly against your Google Apps Script backend.
+      </p>
     </div>
-
-    <!-- MULTI-PANEL DIFFERENTIATOR STRIP (PANEL 1 TO PANEL 6 + CUSTOM EVALUATORS) -->
-    <div id="panelStripContainer" class="bg-blue-950/90 border-t border-blue-800/60 transition-colors">
-      <div class="max-w-[1440px] mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div class="flex flex-wrap items-center gap-1.5">
-          <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 mr-1">Active Interview Panel:</span>
-          <button onclick="selectActivePanel('Panel 1')" id="panelBtn_Panel 1" class="px-2.5 py-1 rounded-lg font-extrabold text-[11px] bg-blue-600 text-white shadow">Panel 1</button>
-          <button onclick="selectActivePanel('Panel 2')" id="panelBtn_Panel 2" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 2</button>
-          <button onclick="selectActivePanel('Panel 3')" id="panelBtn_Panel 3" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 3</button>
-          <button onclick="selectActivePanel('Panel 4')" id="panelBtn_Panel 4" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 4</button>
-          <button onclick="selectActivePanel('Panel 5')" id="panelBtn_Panel 5" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 5</button>
-          <button onclick="selectActivePanel('Panel 6')" id="panelBtn_Panel 6" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 6</button>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-700 rounded-lg px-2 py-1">
-            <span class="text-[10px] font-bold text-amber-300">Snr Designer:</span>
-            <input type="text" id="panelSnrNameInput" onchange="savePanelEvaluators()" placeholder="Snr Name" class="bg-transparent text-white font-semibold text-[11px] w-24 outline-none" />
-          </div>
-          <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-700 rounded-lg px-2 py-1">
-            <span class="text-[10px] font-bold text-emerald-300">Jnr Tech:</span>
-            <input type="text" id="panelIntNameInput" onchange="savePanelEvaluators()" placeholder="Tech Name" class="bg-transparent text-white font-semibold text-[11px] w-24 outline-none" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CLEAN 3-TAB NAVIGATION BAR -->
-    <div class="bg-slate-900 border-t border-slate-800">
-      <div class="max-w-[1440px] mx-auto px-4 flex items-center justify-between gap-2 overflow-x-auto">
-        <nav class="flex items-center gap-1.5 py-1.5">
-          <button id="navTabInterview" onclick="switchMainTab('interview')" class="px-3.5 py-2 rounded-xl text-xs font-extrabold bg-[#2563eb] text-white shadow-sm flex items-center gap-2 transition">
-            <span>🎙️ Live 10-Min Interview</span>
-          </button>
-          <button id="navTabRoster" onclick="switchMainTab('roster')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
-            <span>📋 Candidate Roster</span>
-            <span id="rosterCountBadge" class="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-700 text-slate-200">0</span>
-          </button>
-          <button id="navTabLeaderboard" onclick="switchMainTab('leaderboard')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
-            <span>🏆 4-Dataset Leaderboard</span>
-          </button>
-        </nav>
-
-        <div class="hidden md:flex items-center gap-3 text-[11px] text-slate-400">
-          <span id="sheetSyncIndicator" class="text-emerald-400 font-semibold">● Tracker Ready</span>
-          <span>•</span>
-          <span>Selected Cohort: <strong id="topQuotaSummary" class="text-emerald-400">0 / 7–10</strong></span>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- TOAST NOTIFICATION BANNER -->
-  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs font-semibold flex items-center gap-2.5">
-    <span id="toastIcon">✅</span>
-    <span id="toastText">Saved</span>
   </div>
 
   <!-- ===================================================================== -->
-  <!-- TAB 1: MAIN LIVE 10-MIN INTERVIEW WORKSPACE (ALL 8 QUESTIONS VISIBLE) -->
+  <!-- MAIN APPLICATION SHELL (BLURRED UNTIL PIN IS VERIFIED)                -->
   <!-- ===================================================================== -->
-  <main id="tabViewInterview" class="flex-1 max-w-[1440px] w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
+  <div id="appShell" class="locked-blur flex-1 flex flex-col">
 
-    <!-- LEFT COLUMN (7 COLS): CANDIDATE BAR + ALL 8 VISIBLE QUESTIONS + AI ANALYSIS -->
-    <section class="lg:col-span-7 flex flex-col gap-4">
-
-      <!-- Active Candidate Selector & Dataset 1 (Assessment Score) -->
-      <div id="candidateHeroCard" class="bg-white rounded-2xl border-2 border-blue-200 p-4 shadow-sm transition-colors">
-        <div class="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-slate-100">
-          <div class="flex-1 min-w-[230px]">
+    <!-- TOP STICKY HEADER & MULTI-PANEL SELECTOR BAR -->
+    <header class="bg-[#0f172a] text-white sticky top-0 z-40 shadow-lg border-b border-slate-800">
+      <div class="max-w-[1440px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <!-- Brand + Active Panel Badge -->
+        <div class="flex items-center gap-3">
+          <div id="brandLogoBox" class="w-10 h-10 rounded-xl bg-[#2563eb] flex items-center justify-center font-extrabold text-xl shadow-inner transition-colors">
+            S
+          </div>
+          <div>
             <div class="flex flex-wrap items-center gap-2">
-              <span id="activePanelPill" class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold bg-blue-600 text-white">Panel 1</span>
-              <span id="activeRefBadge" class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">SL-7017</span>
-              <select id="quickSwitchCandidateSelect" onchange="quickSwitchCandidate(this.value)" class="text-sm sm:text-base font-extrabold text-slate-900 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 outline-none focus:border-blue-500 max-w-[260px]">
-                <!-- Populated dynamically -->
-              </select>
-              <span id="activeProfileTag" class="px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-100 text-blue-800">TECHNICAL</span>
+              <h1 class="text-base sm:text-lg font-extrabold tracking-tight">Simplilearn F2F Panel</h1>
+              <span id="headerPanelBadge" class="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/40">
+                Panel 1
+              </span>
             </div>
-            <p id="activeCandMeta" class="text-xs text-slate-500 mt-1">Degree: — • Evaluators: Snr Designer &amp; Jnr Tech</p>
-          </div>
-
-          <!-- Quick Walk-In Toggle + Verdict Selector -->
-          <div class="flex items-center gap-2">
-            <button type="button" onclick="openQuickWalkInModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300">
-              ✏️ Quick Walk-In
-            </button>
-            <div>
-              <select id="activeVerdictSelect" onchange="updateCandidateVerdict(this.value)" class="text-xs font-extrabold rounded-xl border border-slate-300 px-2.5 py-1.5 bg-slate-50 focus:border-blue-500 outline-none">
-                <option value="Pending">⏳ Pending</option>
-                <option value="Strong Hire">🌟 Strong Hire</option>
-                <option value="Shortlist">✅ Shortlist</option>
-                <option value="Hold">⏸️ Hold</option>
-                <option value="Reject">❌ Reject</option>
-              </select>
-            </div>
+            <p class="text-[11px] text-slate-400">10-Min Structured Interview • 4-Dataset Composite Evaluator</p>
           </div>
         </div>
 
-        <!-- DATASET 1: Online Assessment Score + Global Audio Telemetry -->
-        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Dataset 1 • Online Assessment</span>
-              <div class="flex items-center gap-2 mt-1">
-                <input type="number" id="inputAssessmentScore" min="0" max="30" value="0" onchange="updateAssessmentData()" class="w-14 px-2 py-1 text-sm font-extrabold text-center rounded-lg border border-slate-300 bg-white" />
-                <span class="text-xs font-bold text-slate-600">/ 30</span>
-                <span id="assessmentPctBadge" class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-xs font-extrabold">0%</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <button type="button" id="btnToggleTech" onclick="setCandidateProfile('TECH')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#2563eb] text-white">Tech</button>
-              <button type="button" id="btnToggleNonTech" onclick="setCandidateProfile('NON-TECH')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-600">Non-Tech</button>
-            </div>
-          </div>
-
-          <!-- Live Audio & Speech Telemetry -->
-          <div class="bg-blue-50/70 rounded-xl p-3 border border-blue-200 flex items-center justify-between gap-2">
-            <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-800">🎙️ Speech &amp; Fluency Telemetry</span>
-              <div class="flex items-center gap-3 mt-1 text-xs font-bold text-slate-700">
-                <span>⏱️ <strong id="telemetryDuration">0s</strong></span>
-                <span>🗣️ <strong id="telemetryWpm">0</strong> WPM</span>
-                <span>⚠️ Fillers: <strong id="telemetryFillers" class="text-amber-700">0</strong></span>
-              </div>
-            </div>
-            <button type="button" id="btnGlobalAudioToggle" onclick="toggleGlobalRecording()" class="relative px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold shadow flex items-center gap-1.5 transition">
-              <span class="w-2 h-2 rounded-full bg-white"></span>
-              <span id="globalRecLabel">Record Full Session</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Global Session Audio Playback Strip -->
-        <div id="globalAudioPlaybackBar" class="hidden mt-2.5 bg-slate-900 text-white rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <span class="font-bold text-emerald-400">🎧 Full Interview Audio Captured (Sent to Gemini AI):</span>
-          <audio id="globalAudioPlayer" controls class="h-8 max-w-xs"></audio>
-        </div>
-      </div>
-
-      <!-- =================================================================== -->
-      <!-- DATASET 2: ALL 8 INTERVIEW QUESTIONS (IMMEDIATELY VISIBLE!)         -->
-      <!-- =================================================================== -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
-          <div>
-            <span class="text-[11px] font-extrabold uppercase tracking-wider text-blue-600">Dataset 2 • 10-Minute Structured Question Guide (Q1–Q8)</span>
-            <h2 class="text-base font-extrabold text-slate-900">Questions to Ask + Live Audio Capture &amp; AI Analysis</h2>
-          </div>
-          <button type="button" onclick="toggleAllCheatSheets()" id="btnCheatToggle" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-xs font-extrabold transition shadow-xs">
-            💡 Senior Designer Cheat Sheet: ON
-          </button>
-        </div>
-
-        <!-- ALL 8 QUESTIONS RENDERED DIRECTLY IN FULL VIEW (NO HIDDEN ACCORDION) -->
-        <div id="questionsContainer" class="space-y-3.5">
-          <!-- Immediately populated on load with all 8 questions -->
-        </div>
-
-        <!-- Gemini AI Evaluation Trigger & Output -->
-        <div class="mt-4 pt-4 border-t border-slate-200">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <button type="button" id="btnRunAiAnalysis" onclick="analyzeInterviewWithGemini()" class="flex-1 min-w-[230px] py-3 px-4 rounded-xl bg-gradient-to-r from-[#0f172a] to-[#2563eb] hover:opacity-95 text-white text-xs font-extrabold shadow-md flex items-center justify-center gap-2 transition">
-              <span>✨ Analyze Audio &amp; Answers with Gemini AI</span>
-            </button>
+        <!-- Live 10-Minute Pacing Timer -->
+        <div class="flex items-center gap-2 sm:gap-3 bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-2xl">
+          <div class="flex flex-col">
             <div class="flex items-center gap-2">
-              <div class="text-right bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl">
-                <div class="text-[9px] font-bold uppercase text-blue-700">Content AI</div>
-                <div id="aiContentScoreDisplay" class="text-sm font-extrabold text-blue-900">—%</div>
-              </div>
-              <div class="text-right bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-xl">
-                <div class="text-[9px] font-bold uppercase text-purple-700">Comm AI</div>
-                <div id="aiCommScoreDisplay" class="text-sm font-extrabold text-purple-900">—%</div>
-              </div>
-              <div class="text-right bg-slate-900 text-white px-3 py-1.5 rounded-xl">
-                <div class="text-[9px] font-bold uppercase text-blue-300">Combined AI</div>
-                <div id="aiScoreDisplay" class="text-sm font-extrabold">— / 100</div>
-              </div>
+              <span id="timerPhaseBadge" class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Phase 1: Intro &amp; Company (0–3m)
+              </span>
+              <span id="timerDisplay" class="font-mono text-xl sm:text-2xl font-extrabold text-amber-400 tracking-wider">
+                10:00
+              </span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
+              <div id="timerProgressBar" class="h-full bg-emerald-400 transition-all duration-500" style="width: 100%;"></div>
             </div>
           </div>
-
-          <div id="aiResultCard" class="mt-3 hidden bg-slate-900 text-slate-100 rounded-xl p-3.5 text-xs space-y-2 border border-slate-700">
-            <div class="flex items-center justify-between">
-              <span class="font-extrabold text-blue-300 uppercase tracking-wider text-[10px]">Gemini Multimodal Answer &amp; Communication Report</span>
-              <span id="aiFitBadge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">Role Fit</span>
-            </div>
-            <p id="aiSummaryText" class="text-slate-200 leading-relaxed"></p>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
-                <div class="text-[10px] font-bold text-emerald-400 uppercase mb-0.5">Technical / Content</div>
-                <div id="aiStrengthsText" class="text-[11px] text-slate-300"></div>
-              </div>
-              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
-                <div class="text-[10px] font-bold text-purple-400 uppercase mb-0.5">Communication &amp; Fluency</div>
-                <div id="aiCommNotesText" class="text-[11px] text-slate-300"></div>
-              </div>
-              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
-                <div class="text-[10px] font-bold text-amber-400 uppercase mb-0.5">Gaps / Follow-up</div>
-                <div id="aiGapsText" class="text-[11px] text-slate-300"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =================================================================== -->
-    <!-- RIGHT COLUMN (5 COLS): STICKY ZERO-DEFAULT PANEL SCORECARDS & SUBMIT  -->
-    <!-- =================================================================== -->
-    <section class="lg:col-span-5 flex flex-col gap-4">
-      <div class="lg:sticky lg:top-[132px] space-y-4">
-
-        <!-- COMPOSITE SCORE HERO BANNER -->
-        <div class="bg-gradient-to-br from-[#0f172a] via-slate-900 to-[#1e3a8a] text-white rounded-2xl p-4 shadow-md border border-slate-800">
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-widest text-blue-300">Unified 4-Dataset Score (<span id="bannerPanelLbl">Panel 1</span>)</span>
-              <div class="flex items-baseline gap-2 mt-0.5">
-                <span id="compositeScoreBig" class="text-3xl font-extrabold tracking-tight">0.0%</span>
-                <span class="text-xs font-semibold text-slate-300">Composite Index</span>
-              </div>
-            </div>
-            <div class="text-right text-[11px] space-y-0.5 text-slate-300">
-              <div>1. Assessment: <strong id="miniTestPct" class="text-white">0%</strong></div>
-              <div>2. AI Audio/Q&amp;A: <strong id="miniAiPct" class="text-blue-300">Pending</strong></div>
-              <div>3. Snr Designer: <strong id="miniSnrPct" class="text-amber-300">0%</strong></div>
-              <div>4. Jnr Tech: <strong id="miniIntPct" class="text-emerald-300">0%</strong></div>
-            </div>
+          <div class="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+            <button id="btnTimerToggle" onclick="toggleTimer()" class="px-3 py-1.5 rounded-xl bg-[#2563eb] hover:bg-blue-500 text-xs font-bold transition shadow">
+              Start 10m
+            </button>
+            <button onclick="resetTimer()" title="Reset 10:00 Timer" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+              ↺
+            </button>
           </div>
         </div>
 
-        <!-- DATASET 3: INTERVIEW PANEL: SNR DESIGNER (ZERO-DEFAULT RATINGS) -->
-        <div class="bg-white rounded-2xl border-2 border-amber-200 p-4 shadow-sm">
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <div>
-              <div class="flex flex-wrap items-center gap-1.5">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">Dataset 3 • Interview Panel: Snr Designer</span>
-                <span id="snrZeroWarnBadge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded">Default 0 — Rate 0–5</span>
-              </div>
-              <h3 class="text-sm font-extrabold text-slate-900 mt-1">Communication, UX &amp; Course Sense</h3>
-            </div>
-            <div class="text-right">
-              <div id="snrTotalBadge" class="text-sm font-extrabold text-amber-700">0 / 20 (0%)</div>
-            </div>
-          </div>
-
-          <div class="space-y-2.5 text-xs">
-            <div>
-              <div class="flex justify-between font-bold text-slate-700 mb-1">
-                <span>1. Communication &amp; Confidence (Q1, Q2)</span>
-                <span id="valSnr1" class="text-amber-700 font-extrabold">0 / 5</span>
-              </div>
-              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr1" class="w-full amber-slider" />
-            </div>
-
-            <div>
-              <div class="flex justify-between font-bold text-slate-700 mb-1">
-                <span>2. Project &amp; End-User Clarity (Q2)</span>
-                <span id="valSnr2" class="text-amber-700 font-extrabold">0 / 5</span>
-              </div>
-              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr2" class="w-full amber-slider" />
-            </div>
-
-            <div>
-              <div class="flex justify-between font-bold text-slate-700 mb-1">
-                <span>3. UI/UX &amp; Landing Page Sense (Q5)</span>
-                <span id="valSnr3" class="text-amber-700 font-extrabold">0 / 5</span>
-              </div>
-              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr3" class="w-full amber-slider" />
-            </div>
-
-            <div>
-              <div class="flex justify-between font-bold text-slate-700 mb-1">
-                <span>4. Course Ownership &amp; Presence of Mind (Q8)</span>
-                <span id="valSnr4" class="text-amber-700 font-extrabold">0 / 5</span>
-              </div>
-              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr4" class="w-full amber-slider" />
-            </div>
-
-            <input type="text" id="snrNotesInput" onchange="updatePanelRatings()" placeholder="Snr Designer feedback note..." class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 outline-none" />
-          </div>
-        </div>
-
-        <!-- DATASET 4: INTERVIEW PANEL: JNR TECH (ZERO-DEFAULT RATINGS) -->
-        <div class="bg-white rounded-2xl border-2 border-emerald-200 p-4 shadow-sm">
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <div>
-              <div class="flex flex-wrap items-center gap-1.5">
-                <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Dataset 4 • Interview Panel: Jnr Tech</span>
-                <span id="intZeroWarnBadge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded">Default 0 — Rate 0–5</span>
-              </div>
-              <h3 class="text-sm font-extrabold text-slate-900 mt-1">Technical Depth &amp; Coding Logic</h3>
-            </div>
-            <div class="text-right">
-              <div id="intTotalBadge" class="text-sm font-extrabold text-emerald-700">0 / 20 (0%)</div>
-            </div>
-          </div>
-
-          <div class="space-y-2.5 text-xs">
-            <div>
-              <div class="flex justify-between font-bold text-slate-700 mb-1">
-                <span>1. Config &amp; API Fundamentals (Q3, Q4)</span>
-                <span id="valInt1" class="text-emerald-700 font-extrabold">0 / 5</span>
-              </div>
-              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt1" class="w-full emerald-slider" />
-            </div>
-
-            <div>
-              <div class="flex justify-between font-bold text-slate-700 mb-1">
-                <span>2. HTML &amp; Web Structure (Q5)</span>
-                <span id="valInt2" class="text-emerald-700 font-extrabold">0 / 5</span>
-              </div>
-              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt2" class="w-full emerald-slider" />
-            </div>
-
-            <div>
-              <div class="flex justify-between font-bold text-slate-700 mb-1">
-                <span>3. Logic &amp; Divisibility Problem (Q6)</span>
-                <span id="valInt3" class="text-emerald-700 font-extrabold">0 / 5</span>
-              </div>
-              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt3" class="w-full emerald-slider" />
-            </div>
-
-            <div>
-              <div class="flex justify-between font-bold text-slate-700 mb-1">
-                <span>4. Single-Pass Duplicate Removal (Q7)</span>
-                <span id="valInt4" class="text-emerald-700 font-extrabold">0 / 5</span>
-              </div>
-              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt4" class="w-full emerald-slider" />
-            </div>
-
-            <input type="text" id="intNotesInput" onchange="updatePanelRatings()" placeholder="Jnr Tech feedback note..." class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 outline-none" />
-          </div>
-        </div>
-
-        <!-- MANDATORY SUBMIT TRIGGER BUTTON -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col gap-2">
-          <button type="button" onclick="openSubmitConfirmationModal()" class="w-full py-3.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-extrabold shadow-lg flex items-center justify-center gap-2 transition">
-            <span>✅ Submit Candidate Evaluation</span>
+        <!-- Sync, Settings & Lock Controls -->
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <button id="btnHeaderSyncSheet" onclick="fetchCandidatesFromGoogleSheet(false)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-emerald-300 transition flex items-center gap-1.5">
+            <span>🔄 Sync Sheet</span>
           </button>
-          <p id="f2fSheetPushStatus" class="text-[11px] text-center text-slate-500">
-            Opens confirmation pop-up &amp; pushes all 4 datasets to <strong>"Face to Face - Interview"</strong> tab in Google Sheets.
-          </p>
-        </div>
-
-      </div>
-    </section>
-  </main>
-
-  <!-- ===================================================================== -->
-  <!-- TAB 2: CANDIDATE ROSTER & GOOGLE SHEET SYNC SUB-TAB                   -->
-  <!-- ===================================================================== -->
-  <section id="tabViewRoster" class="hidden flex-1 max-w-[1440px] w-full mx-auto p-4 space-y-5">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-      <!-- Live Google Sheet Sync + Paste Fallback (4 Cols) -->
-      <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col gap-3">
-        <div>
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Live Tracker Connection</span>
-          <h2 class="text-base font-extrabold text-slate-900 mt-1">Auto-Sync Walk-In Drive Results</h2>
-          <p class="text-xs text-slate-500 mt-1">
-            Pulls candidates &amp; assessment scores from Tab 1 of your Google Sheet and writes F2F results into <strong>"Face to Face - Interview"</strong>.
-          </p>
-        </div>
-
-        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-          <label class="block text-[10px] font-extrabold uppercase text-slate-500">Google Apps Script Webhook URL</label>
-          <input type="text" id="trackerWebhookInput" onchange="updateTrackerWebhook(this.value)" class="w-full px-2.5 py-1.5 text-[11px] font-mono rounded-lg border border-slate-300 bg-white text-slate-700" />
-          <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-700 cursor-pointer pt-1">
-            <input type="checkbox" id="chkExcludeDisqualified" checked onchange="fetchCandidatesFromGoogleSheet(false)" class="rounded" />
-            <span>Hide Disqualified candidates when importing</span>
-          </label>
-        </div>
-
-        <button type="button" id="btnRosterSyncNow" onclick="fetchCandidatesFromGoogleSheet(false)" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow flex items-center justify-center gap-2 transition">
-          <span>🔄 Fetch Latest Candidates from Google Sheet</span>
-        </button>
-
-        <div class="pt-3 border-t border-slate-100">
-          <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Manual TSV Paste Fallback (Offline)</label>
-          <textarea id="bulkSheetPasteInput" rows="4" placeholder="Paste Google Sheet rows here if offline..."
-            class="w-full p-2.5 text-xs font-mono rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-blue-500 outline-none"></textarea>
-
-          <div class="flex gap-2 mt-2">
-            <button type="button" onclick="importFromSheetPaste()" class="flex-1 py-2 px-3 rounded-xl bg-[#2563eb] hover:bg-blue-700 text-white text-xs font-bold">
-              📥 Import Pasted Rows
-            </button>
-            <button type="button" onclick="openQuickWalkInModal()" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold">
-              + Walk-In
-            </button>
-          </div>
+          <button onclick="openSettingsModal()" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition" title="Configure Sheet URL, Gemini API Key & Weights">
+            ⚙️ Settings
+          </button>
+          <button onclick="lockPanelScreen()" class="px-3 py-2 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-700/60 text-xs font-extrabold text-rose-200 transition flex items-center gap-1">
+            <span>🔒 Lock Panel</span>
+          </button>
         </div>
       </div>
 
-      <!-- Full Candidate Roster Table (8 Cols) -->
-      <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div>
-            <h2 class="text-base font-extrabold text-slate-900">Walk-In Candidate Roster</h2>
-            <p class="text-xs text-slate-500">Click <strong>Start Interview &rarr;</strong> to assign the candidate to your active Panel (<strong id="rosterActivePanelNote">Panel 1</strong>).</p>
+      <!-- MULTI-PANEL DIFFERENTIATOR STRIP (PANEL 1 TO PANEL 6 + EVALUATORS) -->
+      <div id="panelStripContainer" class="bg-blue-950/90 border-t border-blue-800/60 transition-colors">
+        <div class="max-w-[1440px] mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 mr-1">Active Interview Panel:</span>
+            <button onclick="selectActivePanel('Panel 1')" id="panelBtn_Panel 1" class="px-2.5 py-1 rounded-lg font-extrabold text-[11px] bg-blue-600 text-white shadow">Panel 1</button>
+            <button onclick="selectActivePanel('Panel 2')" id="panelBtn_Panel 2" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 2</button>
+            <button onclick="selectActivePanel('Panel 3')" id="panelBtn_Panel 3" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 3</button>
+            <button onclick="selectActivePanel('Panel 4')" id="panelBtn_Panel 4" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 4</button>
+            <button onclick="selectActivePanel('Panel 5')" id="panelBtn_Panel 5" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 5</button>
+            <button onclick="selectActivePanel('Panel 6')" id="panelBtn_Panel 6" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 6</button>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <input type="text" id="rosterSearchInput" oninput="renderRosterTable()" placeholder="Search name, Ref ID, degree..." class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 outline-none focus:border-blue-500" />
-            <div class="flex gap-1 bg-slate-100 p-1 rounded-xl">
-              <button onclick="setRosterFilter('ALL')" id="filterALL" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white">All</button>
-              <button onclick="setRosterFilter('PENDING')" id="filterPENDING" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Pending</button>
-              <button onclick="setRosterFilter('COMPLETED')" id="filterCOMPLETED" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Completed</button>
-              <button onclick="setRosterFilter('TECH')" id="filterTECH" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Tech</button>
-              <button onclick="setRosterFilter('NON-TECH')" id="filterNONTECH" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Non-Tech</button>
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-700 rounded-lg px-2 py-1">
+              <span class="text-[10px] font-bold text-amber-300">Snr Designer:</span>
+              <input type="text" id="panelSnrNameInput" onchange="savePanelEvaluators()" placeholder="Snr Name" class="bg-transparent text-white font-semibold text-[11px] w-24 outline-none" />
             </div>
+            <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-700 rounded-lg px-2 py-1">
+              <span class="text-[10px] font-bold text-emerald-300">Jnr Tech:</span>
+              <input type="text" id="panelIntNameInput" onchange="savePanelEvaluators()" placeholder="Tech Name" class="bg-transparent text-white font-semibold text-[11px] w-24 outline-none" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLEAN 3-TAB NAVIGATION BAR -->
+      <div class="bg-slate-900 border-t border-slate-800">
+        <div class="max-w-[1440px] mx-auto px-4 flex items-center justify-between gap-2 overflow-x-auto">
+          <nav class="flex items-center gap-1.5 py-1.5">
+            <button id="navTabInterview" onclick="switchMainTab('interview')" class="px-3.5 py-2 rounded-xl text-xs font-extrabold bg-[#2563eb] text-white shadow-sm flex items-center gap-2 transition">
+              <span>🎙️ Live 10-Min Interview</span>
+            </button>
+            <button id="navTabRoster" onclick="switchMainTab('roster')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+              <span>👥 Candidate Roster &amp; Sheet Import</span>
+              <span id="rosterCountBadge" class="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-700 text-slate-200">0</span>
+            </button>
+            <button id="navTabLeaderboard" onclick="switchMainTab('leaderboard')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+              <span>🏆 4-Dataset Leaderboard</span>
+            </button>
+          </nav>
+
+          <div class="hidden md:flex items-center gap-3 text-[11px] text-slate-400">
+            <span id="sheetSyncIndicator" class="text-emerald-400 font-semibold">● Tracker Ready</span>
+            <span>•</span>
+            <span>Selected Cohort: <strong id="topQuotaSummary" class="text-emerald-400">0 / 7–10</strong></span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- TOAST NOTIFICATION BANNER -->
+    <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs font-semibold flex items-center gap-2.5">
+      <span id="toastIcon">✅</span>
+      <span id="toastText">Saved</span>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: MAIN LIVE 10-MIN INTERVIEW WORKSPACE (ALL 8 QUESTIONS OPEN)  -->
+    <!-- =================================================================== -->
+    <main id="tabViewInterview" class="flex-1 max-w-[1440px] w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+      <!-- LEFT COLUMN (7 COLS): CANDIDATE BAR + ALL 8 VISIBLE QUESTIONS + AI ANALYSIS -->
+      <section class="lg:col-span-7 flex flex-col gap-4">
+
+        <!-- Active Candidate Selector & Dataset 1 (Assessment Score) -->
+        <div id="candidateHeroCard" class="bg-white rounded-2xl border-2 border-blue-200 p-4 shadow-sm transition-colors">
+          <div class="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="flex-1 min-w-[230px]">
+              <div class="flex flex-wrap items-center gap-2">
+                <span id="activePanelPill" class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold bg-blue-600 text-white">Panel 1</span>
+                <span id="activeRefBadge" class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">SL-7017</span>
+                <select id="quickSwitchCandidateSelect" onchange="quickSwitchCandidate(this.value)" class="text-sm sm:text-base font-extrabold text-slate-900 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 outline-none focus:border-blue-500 max-w-[260px]">
+                  <!-- Populated dynamically -->
+                </select>
+                <span id="activeProfileTag" class="px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-100 text-blue-800">TECHNICAL</span>
+              </div>
+              <p id="activeCandMeta" class="text-xs text-slate-500 mt-1">Degree: — • Evaluators: Snr Designer &amp; Jnr Tech</p>
+            </div>
+
+            <!-- Quick Walk-In Toggle + Verdict Selector -->
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="openQuickWalkInModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300">
+                + Walk-In
+              </button>
+              <div>
+                <select id="activeVerdictSelect" onchange="updateCandidateVerdict(this.value)" class="text-xs font-extrabold rounded-xl border border-slate-300 px-2.5 py-1.5 bg-slate-50 focus:border-blue-500 outline-none">
+                  <option value="Pending">⏳ Pending</option>
+                  <option value="Strong Hire">🌟 Strong Hire</option>
+                  <option value="Shortlist">✅ Shortlist</option>
+                  <option value="Hold">⏸️ Hold</option>
+                  <option value="Reject">❌ Reject</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- DATASET 1: Online Assessment Score + Global Audio Telemetry -->
+          <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Dataset 1 • Online Assessment</span>
+                <div class="flex items-center gap-2 mt-1">
+                  <input type="number" id="inputAssessmentScore" min="0" max="30" value="0" onchange="updateAssessmentData()" class="w-14 px-2 py-1 text-sm font-extrabold text-center rounded-lg border border-slate-300 bg-white" />
+                  <span class="text-xs font-bold text-slate-600">/ 30</span>
+                  <span id="assessmentPctBadge" class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-xs font-extrabold">0%</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" id="btnToggleTech" onclick="setCandidateProfile('TECH')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#2563eb] text-white">Tech</button>
+                <button type="button" id="btnToggleNonTech" onclick="setCandidateProfile('NON-TECH')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-600">Non-Tech</button>
+              </div>
+            </div>
+
+            <!-- Live Audio & Speech Telemetry -->
+            <div class="bg-blue-50/70 rounded-xl p-3 border border-blue-200 flex items-center justify-between gap-2">
+              <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-800">🎙️ Speech &amp; Fluency Telemetry</span>
+                <div class="flex items-center gap-3 mt-1 text-xs font-bold text-slate-700">
+                  <span>⏱️ <strong id="telemetryDuration">0s</strong></span>
+                  <span>🗣️ <strong id="telemetryWpm">0</strong> WPM</span>
+                  <span>⚠️ Fillers: <strong id="telemetryFillers" class="text-amber-700">0</strong></span>
+                </div>
+              </div>
+              <button type="button" id="btnGlobalAudioToggle" onclick="toggleGlobalRecording()" class="relative px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold shadow flex items-center gap-1.5 transition">
+                <span class="w-2 h-2 rounded-full bg-white"></span>
+                <span id="globalRecLabel">Record Full Session</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Global Session Audio Playback Strip -->
+          <div id="globalAudioPlaybackBar" class="hidden mt-2.5 bg-slate-900 text-white rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span class="font-bold text-emerald-400">🎧 Full Interview Audio Captured:</span>
+            <audio id="globalAudioPlayer" controls class="h-8 max-w-xs"></audio>
+          </div>
+        </div>
+
+        <!-- DATASET 2: ALL 8 INTERVIEW QUESTIONS (IMMEDIATELY VISIBLE) -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
+            <div>
+              <span class="text-[11px] font-extrabold uppercase tracking-wider text-blue-600">Dataset 2 • 10-Minute Structured Question Guide (Q1–Q8)</span>
+              <h2 class="text-base font-extrabold text-slate-900">Questions to Ask + Live Audio Capture &amp; AI Analysis</h2>
+            </div>
+            <button type="button" onclick="toggleAllCheatSheets()" id="btnCheatToggle" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-xs font-extrabold transition shadow-xs">
+              💡 Senior Designer Cheat Sheet: ON
+            </button>
+          </div>
+
+          <div id="questionsContainer" class="space-y-3.5">
+            <!-- Populated immediately on load -->
+          </div>
+
+          <!-- Gemini AI Evaluation Trigger & Output -->
+          <div class="mt-4 pt-4 border-t border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <button type="button" id="btnRunAiAnalysis" onclick="analyzeInterviewWithGemini()" class="flex-1 min-w-[230px] py-3 px-4 rounded-xl bg-gradient-to-r from-[#0f172a] to-[#2563eb] hover:opacity-95 text-white text-xs font-extrabold shadow-md flex items-center justify-center gap-2 transition">
+                <span>✨ Analyze Audio &amp; Answers with Gemini AI</span>
+              </button>
+              <div class="flex items-center gap-2">
+                <div class="text-right bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl">
+                  <div class="text-[9px] font-bold uppercase text-blue-700">Content AI</div>
+                  <div id="aiContentScoreDisplay" class="text-sm font-extrabold text-blue-900">—%</div>
+                </div>
+                <div class="text-right bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-xl">
+                  <div class="text-[9px] font-bold uppercase text-purple-700">Comm AI</div>
+                  <div id="aiCommScoreDisplay" class="text-sm font-extrabold text-purple-900">—%</div>
+                </div>
+                <div class="text-right bg-slate-900 text-white px-3 py-1.5 rounded-xl">
+                  <div class="text-[9px] font-bold uppercase text-blue-300">Combined AI</div>
+                  <div id="aiScoreDisplay" class="text-sm font-extrabold">— / 100</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="aiResultCard" class="mt-3 hidden bg-slate-900 text-slate-100 rounded-xl p-3.5 text-xs space-y-2 border border-slate-700">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-blue-300 uppercase tracking-wider text-[10px]">Gemini Answer &amp; Communication Report</span>
+                <span id="aiFitBadge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">Role Fit</span>
+              </div>
+              <p id="aiSummaryText" class="text-slate-200 leading-relaxed"></p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+                  <div class="text-[10px] font-bold text-emerald-400 uppercase mb-0.5">Technical / Content</div>
+                  <div id="aiStrengthsText" class="text-[11px] text-slate-300"></div>
+                </div>
+                <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+                  <div class="text-[10px] font-bold text-purple-400 uppercase mb-0.5">Communication &amp; Fluency</div>
+                  <div id="aiCommNotesText" class="text-[11px] text-slate-300"></div>
+                </div>
+                <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+                  <div class="text-[10px] font-bold text-amber-400 uppercase mb-0.5">Gaps / Follow-up</div>
+                  <div id="aiGapsText" class="text-[11px] text-slate-300"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN (5 COLS): STICKY ZERO-DEFAULT PANEL SCORECARDS & SUBMIT -->
+      <section class="lg:col-span-5 flex flex-col gap-4">
+        <div class="lg:sticky lg:top-[132px] space-y-4">
+
+          <!-- COMPOSITE SCORE HERO BANNER -->
+          <div class="bg-gradient-to-br from-[#0f172a] via-slate-900 to-[#1e3a8a] text-white rounded-2xl p-4 shadow-md border border-slate-800">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-blue-300">Unified 4-Dataset Score (<span id="bannerPanelLbl">Panel 1</span>)</span>
+                <div class="flex items-baseline gap-2 mt-0.5">
+                  <span id="compositeScoreBig" class="text-3xl font-extrabold tracking-tight">0.0%</span>
+                  <span class="text-xs font-semibold text-slate-300">Composite Index</span>
+                </div>
+              </div>
+              <div class="text-right text-[11px] space-y-0.5 text-slate-300">
+                <div>1. Assessment: <strong id="miniTestPct" class="text-white">0%</strong></div>
+                <div>2. AI Audio/Q&amp;A: <strong id="miniAiPct" class="text-blue-300">Pending</strong></div>
+                <div>3. Snr Designer: <strong id="miniSnrPct" class="text-amber-300">0%</strong></div>
+                <div>4. Jnr Tech: <strong id="miniIntPct" class="text-emerald-300">0%</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DATASET 3: INTERVIEW PANEL: SNR DESIGNER (ZERO-DEFAULT RATINGS) -->
+          <div class="bg-white rounded-2xl border-2 border-amber-200 p-4 shadow-sm">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">Dataset 3 • Interview Panel: Snr Designer</span>
+                  <span id="snrZeroWarnBadge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded">Default 0 — Rate 0–5</span>
+                </div>
+                <h3 class="text-sm font-extrabold text-slate-900 mt-1">Communication, UX &amp; Learner Experience</h3>
+              </div>
+              <div class="text-right">
+                <div id="snrTotalBadge" class="text-sm font-extrabold text-amber-700">0 / 20 (0%)</div>
+              </div>
+            </div>
+
+            <div class="space-y-2.5 text-xs">
+              <div>
+                <div class="flex justify-between font-bold text-slate-700 mb-1">
+                  <span>1. Communication &amp; Executive Presence (Q1, Q2)</span>
+                  <span id="valSnr1" class="text-amber-700 font-extrabold">0 / 5</span>
+                </div>
+                <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr1" class="w-full amber-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between font-bold text-slate-700 mb-1">
+                  <span>2. Project Clarity &amp; End-User Storytelling (Q2)</span>
+                  <span id="valSnr2" class="text-amber-700 font-extrabold">0 / 5</span>
+                </div>
+                <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr2" class="w-full amber-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between font-bold text-slate-700 mb-1">
+                  <span>3. UI/UX &amp; Learner Experience Sense (Q5)</span>
+                  <span id="valSnr3" class="text-amber-700 font-extrabold">0 / 5</span>
+                </div>
+                <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr3" class="w-full amber-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between font-bold text-slate-700 mb-1">
+                  <span>4. Course Launch &amp; Ownership Mindset (Q8)</span>
+                  <span id="valSnr4" class="text-amber-700 font-extrabold">0 / 5</span>
+                </div>
+                <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr4" class="w-full amber-slider" />
+              </div>
+
+              <input type="text" id="snrNotesInput" onchange="updatePanelRatings()" placeholder="Snr Designer feedback note..." class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 outline-none" />
+            </div>
+          </div>
+
+          <!-- DATASET 4: INTERVIEW PANEL: JNR TECH (ZERO-DEFAULT RATINGS) -->
+          <div class="bg-white rounded-2xl border-2 border-emerald-200 p-4 shadow-sm">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Dataset 4 • Interview Panel: Jnr Tech</span>
+                  <span id="intZeroWarnBadge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded">Default 0 — Rate 0–5</span>
+                </div>
+                <h3 class="text-sm font-extrabold text-slate-900 mt-1">Technical Fundamentals &amp; Coding Logic</h3>
+              </div>
+              <div class="text-right">
+                <div id="intTotalBadge" class="text-sm font-extrabold text-emerald-700">0 / 20 (0%)</div>
+              </div>
+            </div>
+
+            <div class="space-y-2.5 text-xs">
+              <div>
+                <div class="flex justify-between font-bold text-slate-700 mb-1">
+                  <span>1. Technical Fundamentals: Config &amp; APIs (Q3, Q4)</span>
+                  <span id="valInt1" class="text-emerald-700 font-extrabold">0 / 5</span>
+                </div>
+                <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt1" class="w-full emerald-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between font-bold text-slate-700 mb-1">
+                  <span>2. HTML &amp; Web Structure Literacy (Q5)</span>
+                  <span id="valInt2" class="text-emerald-700 font-extrabold">0 / 5</span>
+                </div>
+                <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt2" class="w-full emerald-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between font-bold text-slate-700 mb-1">
+                  <span>3. Logic &amp; Coding Problem-Solving (Q6, Q7)</span>
+                  <span id="valInt3" class="text-emerald-700 font-extrabold">0 / 5</span>
+                </div>
+                <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt3" class="w-full emerald-slider" />
+              </div>
+
+              <div>
+                <div class="flex justify-between font-bold text-slate-700 mb-1">
+                  <span>4. AI Prompting &amp; Troubleshooting Rigor</span>
+                  <span id="valInt4" class="text-emerald-700 font-extrabold">0 / 5</span>
+                </div>
+                <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt4" class="w-full emerald-slider" />
+              </div>
+
+              <input type="text" id="intNotesInput" onchange="updatePanelRatings()" placeholder="Jnr Tech feedback note..." class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 outline-none" />
+            </div>
+          </div>
+
+          <!-- MANDATORY SUBMIT TRIGGER BUTTON -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col gap-2">
+            <button type="button" onclick="openSubmitConfirmationModal()" class="w-full py-3.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-extrabold shadow-lg flex items-center justify-center gap-2 transition">
+              <span>✅ Submit Candidate Evaluation</span>
+            </button>
+            <p id="f2fSheetPushStatus" class="text-[11px] text-center text-slate-500">
+              Opens confirmation pop-up &amp; pushes all 4 datasets to <strong>"Face to Face - Interview"</strong> tab in Google Sheets.
+            </p>
+          </div>
+
+        </div>
+      </section>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: CANDIDATE ROSTER & SHEET IMPORT SUB-TAB                      -->
+    <!-- =================================================================== -->
+    <section id="tabViewRoster" class="hidden flex-1 max-w-[1440px] w-full mx-auto p-4 space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <!-- Live Google Sheet Sync + Paste Fallback (4 Cols) -->
+        <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col gap-3">
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Live Tracker Connection</span>
+            <h2 class="text-base font-extrabold text-slate-900 mt-1">Auto-Sync Walk-In Drive Results</h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Pulls candidates &amp; assessment scores from Tab 1 of your Google Sheet and writes F2F results into <strong>"Face to Face - Interview"</strong>.
+            </p>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+            <label class="block text-[10px] font-extrabold uppercase text-slate-500">Google Apps Script Webhook URL</label>
+            <input type="text" id="trackerWebhookInput" onchange="updateTrackerWebhook(this.value)" class="w-full px-2.5 py-1.5 text-[11px] font-mono rounded-lg border border-slate-300 bg-white text-slate-700" />
+            <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-700 cursor-pointer pt-1">
+              <input type="checkbox" id="chkShowDisqualified" onchange="fetchCandidatesFromGoogleSheet(false)" class="rounded" />
+              <span>Show Disqualified candidates from Tab 1</span>
+            </label>
+          </div>
+
+          <button type="button" onclick="fetchCandidatesFromGoogleSheet(false)" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow flex items-center justify-center gap-2 transition">
+            <span>🔄 Fetch Latest Candidates from Google Sheet</span>
+          </button>
+
+          <div class="pt-3 border-t border-slate-100">
+            <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Manual TSV Paste Fallback (Offline)</label>
+            <textarea id="bulkSheetPasteInput" rows="4" placeholder="Paste Google Sheet rows here if offline..."
+              class="w-full p-2.5 text-xs font-mono rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-blue-500 outline-none"></textarea>
+
+            <div class="flex gap-2 mt-2">
+              <button type="button" onclick="importFromSheetPaste()" class="flex-1 py-2 px-3 rounded-xl bg-[#2563eb] hover:bg-blue-700 text-white text-xs font-bold">
+                📥 Import Pasted Rows
+              </button>
+              <button type="button" onclick="openQuickWalkInModal()" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold">
+                + Walk-In
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Candidate Roster Table (8 Cols) -->
+        <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-base font-extrabold text-slate-900">Walk-In Candidate Roster</h2>
+              <p class="text-xs text-slate-500">Click <strong>Start Interview &rarr;</strong> to assign the candidate to your active Panel (<strong id="rosterActivePanelNote">Panel 1</strong>).</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="text" id="rosterSearchInput" oninput="renderRosterTable()" placeholder="Search name, Ref ID, degree..." class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 outline-none focus:border-blue-500" />
+              <div class="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                <button onclick="setRosterFilter('ALL')" id="filterALL" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white">All</button>
+                <button onclick="setRosterFilter('PENDING')" id="filterPENDING" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Pending</button>
+                <button onclick="setRosterFilter('COMPLETED')" id="filterCOMPLETED" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Evaluated</button>
+                <button onclick="setRosterFilter('TECH')" id="filterTECH" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Tech</button>
+                <button onclick="setRosterFilter('NON-TECH')" id="filterNONTECH" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Non-Tech</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50">
+                  <th class="py-2.5 px-3">Ref ID</th>
+                  <th class="py-2.5 px-3">Candidate &amp; Degree</th>
+                  <th class="py-2.5 px-3">Track</th>
+                  <th class="py-2.5 px-3">Test (/30)</th>
+                  <th class="py-2.5 px-3">Panel</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="rosterTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: 4-DATASET COMPOSITE LEADERBOARD (FILTERABLE BY PANEL 1–6)    -->
+    <!-- =================================================================== -->
+    <section id="tabViewLeaderboard" class="hidden flex-1 max-w-[1440px] w-full mx-auto p-4 space-y-5">
+      <!-- Quota Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="text-xs font-bold text-slate-500">Target Cohort Size</div>
+          <div class="text-2xl font-extrabold text-slate-900 mt-1">7 – 10 <span class="text-xs font-semibold text-slate-400">Interns</span></div>
+          <div class="text-[11px] text-slate-500 mt-1">4–6 Tech + 3–4 Non-Tech</div>
+        </div>
+        <div class="bg-emerald-50 rounded-2xl border border-emerald-200 p-4 shadow-sm">
+          <div class="text-xs font-bold text-emerald-800">Strong Hire</div>
+          <div id="statStrongHire" class="text-2xl font-extrabold text-emerald-700 mt-1">0</div>
+          <div class="text-[11px] text-emerald-700 mt-1">Immediate offer ready</div>
+        </div>
+        <div class="bg-blue-50 rounded-2xl border border-blue-200 p-4 shadow-sm">
+          <div class="text-xs font-bold text-blue-800">Shortlisted</div>
+          <div id="statShortlist" class="text-2xl font-extrabold text-blue-700 mt-1">0</div>
+          <div class="text-[11px] text-blue-700 mt-1">Backup / calibration</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="text-xs font-bold text-slate-500">Total Roster</div>
+          <div id="statTotalCand" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Across all panels</div>
+        </div>
+      </div>
+
+      <!-- Ranked 4-Dataset Leaderboard Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-extrabold text-slate-900">Ranked 4-Dataset Candidate Leaderboard</h2>
+            <p class="text-xs text-slate-500">Filter by Panel to compare evaluations across all interview tables or export the combined cohort.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Panel Filter Pills -->
+            <div class="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl">
+              <button onclick="setLeaderboardPanelFilter('ALL')" id="lbFilter_ALL" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white">All Panels</button>
+              <button onclick="setLeaderboardPanelFilter('Panel 1')" id="lbFilter_Panel 1" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 1</button>
+              <button onclick="setLeaderboardPanelFilter('Panel 2')" id="lbFilter_Panel 2" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 2</button>
+              <button onclick="setLeaderboardPanelFilter('Panel 3')" id="lbFilter_Panel 3" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 3</button>
+              <button onclick="setLeaderboardPanelFilter('Panel 4')" id="lbFilter_Panel 4" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 4</button>
+              <button onclick="setLeaderboardPanelFilter('Panel 5')" id="lbFilter_Panel 5" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 5</button>
+              <button onclick="setLeaderboardPanelFilter('Panel 6')" id="lbFilter_Panel 6" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 6</button>
+            </div>
+
+            <button type="button" onclick="exportToCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow">
+              📥 Export CSV
+            </button>
           </div>
         </div>
 
@@ -537,101 +676,27 @@
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50">
-                <th class="py-2.5 px-3">Ref ID</th>
-                <th class="py-2.5 px-3">Candidate &amp; Degree</th>
-                <th class="py-2.5 px-3">Track</th>
-                <th class="py-2.5 px-3">Test (/30)</th>
-                <th class="py-2.5 px-3">Panel</th>
-                <th class="py-2.5 px-3">Status</th>
-                <th class="py-2.5 px-3 text-right">Action</th>
+                <th class="py-3 px-3">Rank</th>
+                <th class="py-3 px-3">Panel</th>
+                <th class="py-3 px-3">Candidate</th>
+                <th class="py-3 px-3">1. Assessment</th>
+                <th class="py-3 px-3">2. AI Content + Comm</th>
+                <th class="py-3 px-3">3. Snr Designer</th>
+                <th class="py-3 px-3">4. Jnr Tech</th>
+                <th class="py-3 px-3">Composite</th>
+                <th class="py-3 px-3">Verdict</th>
+                <th class="py-3 px-3 text-right">Open</th>
               </tr>
             </thead>
-            <tbody id="rosterTableBody" class="divide-y divide-slate-100">
+            <tbody id="leaderboardTableBody" class="divide-y divide-slate-100">
               <!-- Populated dynamically -->
             </tbody>
           </table>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ===================================================================== -->
-  <!-- TAB 3: 4-DATASET COMPOSITE LEADERBOARD (FILTERABLE BY PANEL 1–6)      -->
-  <!-- ===================================================================== -->
-  <section id="tabViewLeaderboard" class="hidden flex-1 max-w-[1440px] w-full mx-auto p-4 space-y-5">
-    <!-- Quota Summary Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-        <div class="text-xs font-bold text-slate-500">Target Cohort Size</div>
-        <div class="text-2xl font-extrabold text-slate-900 mt-1">7 – 10 <span class="text-xs font-semibold text-slate-400">Interns</span></div>
-        <div class="text-[11px] text-slate-500 mt-1">4–6 Tech + 3–4 Non-Tech</div>
-      </div>
-      <div class="bg-emerald-50 rounded-2xl border border-emerald-200 p-4 shadow-sm">
-        <div class="text-xs font-bold text-emerald-800">Strong Hire</div>
-        <div id="statStrongHire" class="text-2xl font-extrabold text-emerald-700 mt-1">0</div>
-        <div class="text-[11px] text-emerald-700 mt-1">Immediate offer ready</div>
-      </div>
-      <div class="bg-blue-50 rounded-2xl border border-blue-200 p-4 shadow-sm">
-        <div class="text-xs font-bold text-blue-800">Shortlisted</div>
-        <div id="statShortlist" class="text-2xl font-extrabold text-blue-700 mt-1">0</div>
-        <div class="text-[11px] text-blue-700 mt-1">Backup / calibration</div>
-      </div>
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-        <div class="text-xs font-bold text-slate-500">Total Roster</div>
-        <div id="statTotalCand" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
-        <div class="text-[11px] text-slate-500 mt-1">Across all panels</div>
-      </div>
-    </div>
-
-    <!-- Ranked 4-Dataset Leaderboard Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 class="text-base font-extrabold text-slate-900">Ranked 4-Dataset Candidate Leaderboard</h2>
-          <p class="text-xs text-slate-500">Filter by Panel to compare evaluations across all interview tables or export the combined cohort.</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <!-- Panel Filter Pills -->
-          <div class="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl">
-            <button onclick="setLeaderboardPanelFilter('ALL')" id="lbFilter_ALL" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white">All Panels</button>
-            <button onclick="setLeaderboardPanelFilter('Panel 1')" id="lbFilter_Panel 1" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 1</button>
-            <button onclick="setLeaderboardPanelFilter('Panel 2')" id="lbFilter_Panel 2" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 2</button>
-            <button onclick="setLeaderboardPanelFilter('Panel 3')" id="lbFilter_Panel 3" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 3</button>
-            <button onclick="setLeaderboardPanelFilter('Panel 4')" id="lbFilter_Panel 4" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 4</button>
-            <button onclick="setLeaderboardPanelFilter('Panel 5')" id="lbFilter_Panel 5" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 5</button>
-            <button onclick="setLeaderboardPanelFilter('Panel 6')" id="lbFilter_Panel 6" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 6</button>
-          </div>
-
-          <button type="button" onclick="exportToCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow">
-            📥 Export CSV
-          </button>
-        </div>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50">
-              <th class="py-3 px-3">Rank</th>
-              <th class="py-3 px-3">Panel</th>
-              <th class="py-3 px-3">Candidate</th>
-              <th class="py-3 px-3">1. Assessment</th>
-              <th class="py-3 px-3">2. AI Content + Comm</th>
-              <th class="py-3 px-3">3. Snr Designer</th>
-              <th class="py-3 px-3">4. Jnr Tech</th>
-              <th class="py-3 px-3">Composite</th>
-              <th class="py-3 px-3">Verdict</th>
-              <th class="py-3 px-3 text-right">Open</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboardTableBody" class="divide-y divide-slate-100">
-            <!-- Populated dynamically -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+  </div> <!-- END #appShell -->
 
   <!-- ===================================================================== -->
   <!-- MANDATORY SUBMIT CONFIRMATION POP-UP MODAL                            -->
@@ -700,7 +765,7 @@
           ✨ Run AI First
         </button>
         <button type="button" onclick="confirmAndFinalizeSubmission()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow-md">
-          Confirm &amp; Push to Sheet ✓
+          Confirm &amp; Push to Google Sheet ✓
         </button>
       </div>
     </div>
@@ -765,51 +830,67 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- COMPOSITE WEIGHT CALIBRATION MODAL                                    -->
+  <!-- SETTINGS MODAL (SHEET URL, GEMINI API KEY & 4-DATASET WEIGHTS)        -->
   <!-- ===================================================================== -->
-  <div id="weightModal" class="fixed inset-0 z-50 hidden bg-slate-900/75 flex items-center justify-center p-4">
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden bg-slate-900/75 flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full rounded-2xl p-5 shadow-2xl border border-slate-200">
       <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-        <h3 class="text-base font-extrabold text-slate-900">Calibrate 4-Dataset Weights</h3>
-        <button type="button" onclick="closeWeightModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+        <h3 class="text-base font-extrabold text-slate-900">⚙️ Panel Configuration &amp; Weights</h3>
+        <button type="button" onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
       </div>
-      <p class="text-xs text-slate-500 mt-2">Adjust relative weights across the 4 datasets (auto-normalized to 100%).</p>
 
-      <div class="space-y-3 mt-4 text-xs">
+      <div class="space-y-3 mt-3 text-xs">
         <div>
-          <div class="flex justify-between font-bold"><span>1. Online Assessment (/30)</span><span id="wLblTest">25%</span></div>
-          <input type="range" min="0" max="100" value="25" id="wSliderTest" oninput="updateWeightsUI()" class="w-full" />
+          <label class="block font-bold text-slate-700 mb-1">Google Apps Script Web App URL</label>
+          <input type="text" id="settingsWebhookInput" onchange="updateTrackerWebhook(this.value)" placeholder="https://script.google.com/macros/s/.../exec"
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-[11px]" />
         </div>
+
         <div>
-          <div class="flex justify-between font-bold text-blue-700"><span>2. Gemini AI Content + Comm</span><span id="wLblAi">25%</span></div>
-          <input type="range" min="0" max="100" value="25" id="wSliderAi" oninput="updateWeightsUI()" class="w-full" />
+          <label class="block font-bold text-slate-700 mb-1">🔑 Gemini API Key (Optional — Local Rubric Fallback Built-In)</label>
+          <input type="password" id="settingsGeminiKeyInput" onchange="saveGeminiKey(this.value)" placeholder="AIzaSy..."
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono text-[11px]" />
         </div>
-        <div>
-          <div class="flex justify-between font-bold text-amber-700"><span>3. Interview Panel: Snr Designer</span><span id="wLblSnr">25%</span></div>
-          <input type="range" min="0" max="100" value="25" id="wSliderSnr" oninput="updateWeightsUI()" class="w-full amber-slider" />
-        </div>
-        <div>
-          <div class="flex justify-between font-bold text-emerald-700"><span>4. Interview Panel: Jnr Tech</span><span id="wLblInt">25%</span></div>
-          <input type="range" min="0" max="100" value="25" id="wSliderInt" oninput="updateWeightsUI()" class="w-full emerald-slider" />
+
+        <div class="pt-2 border-t border-slate-100 space-y-2.5">
+          <div class="font-extrabold text-slate-800">Calibrate 4-Dataset Weights</div>
+          <div>
+            <div class="flex justify-between font-bold"><span>1. Online Assessment (/30)</span><span id="wLblTest">25%</span></div>
+            <input type="range" min="0" max="100" value="25" id="wSliderTest" oninput="updateWeightsUI()" class="w-full" />
+          </div>
+          <div>
+            <div class="flex justify-between font-bold text-blue-700"><span>2. Gemini AI Content + Comm</span><span id="wLblAi">25%</span></div>
+            <input type="range" min="0" max="100" value="25" id="wSliderAi" oninput="updateWeightsUI()" class="w-full" />
+          </div>
+          <div>
+            <div class="flex justify-between font-bold text-amber-700"><span>3. Interview Panel: Snr Designer</span><span id="wLblSnr">25%</span></div>
+            <input type="range" min="0" max="100" value="25" id="wSliderSnr" oninput="updateWeightsUI()" class="w-full amber-slider" />
+          </div>
+          <div>
+            <div class="flex justify-between font-bold text-emerald-700"><span>4. Interview Panel: Jnr Tech</span><span id="wLblInt">25%</span></div>
+            <input type="range" min="0" max="100" value="25" id="wSliderInt" oninput="updateWeightsUI()" class="w-full emerald-slider" />
+          </div>
         </div>
       </div>
 
       <div class="flex gap-2 mt-5">
         <button type="button" onclick="resetDefaultWeights()" class="px-3 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-700">Reset 25% Equal</button>
-        <button type="button" onclick="closeWeightModal()" class="flex-1 py-2 rounded-xl bg-[#2563eb] text-white text-xs font-extrabold">Done</button>
+        <button type="button" onclick="closeSettingsModal()" class="flex-1 py-2 rounded-xl bg-[#2563eb] text-white text-xs font-extrabold">Save &amp; Close</button>
       </div>
     </div>
   </div>
 
   <script>
     // =========================================================================
-    // CONFIGURATION & PANEL COLOR THEMES (PANEL 1 TO PANEL 6)
+    // CONFIGURATION & STORAGE KEYS (ZERO PLAIN-TEXT PIN IN SOURCE)
     // =========================================================================
-    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxcnildeWJka3_Ry0vJnf77SRzX_38YLiyaU7KeSTjWYAUwsg0kKkS1BXN3A4iWK1fh/exec";
+    const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxcnildeWJka3_Ry0vJnf77SRzX_38YLiyaU7KeSTjWYAUwsg0kKkS1BXN3A4iWK1fh/exec";
     const GEMINI_MODEL = "gemini-2.5-flash";
-    const apiKey = ""; // Injected at runtime
-    const STORAGE_KEY = "simplilearn_f2f_multipanel_v4";
-    const F2F_PENDING_SYNC_KEY = "simplilearn_f2f_pending_queue_v4";
+    const STORAGE_KEY = "simplilearn_f2f_multipanel_v5";
+    const WEBHOOK_STORAGE_KEY = "sl_f2f_webhook_url";
+    const GEMINI_KEY_STORAGE = "sl_f2f_gemini_key";
+    const SESSION_PIN_KEY = "sl_f2f_panel_pin";
+    const F2F_PENDING_SYNC_KEY = "simplilearn_f2f_pending_queue_v5";
 
     const PANEL_THEMES = {
       "Panel 1": {
@@ -910,15 +991,15 @@
         id: "q6",
         phase: "7.5–8.5m",
         title: "Q6. Logic / Coding — Divisibility Without / or %",
-        prompt: "Given two numbers like 40 and 5, how do you check if 40 is divisible by 5 WITHOUT using division (/) or modulus (%) operators? (Tech candidates: write/explain code logic)",
+        prompt: "Given two numbers like 40 and 5, how do you check if 40 is divisible by 5 WITHOUT using division (/) or modulus (%) operators? (Verbal logic for Non-Tech; code for Tech)",
         cheatSheet: "Subtract 5 repeatedly from 40 until you reach 0 (divisible) or go below 0 (not divisible). Works for any two numbers without division!",
         quickChips: ["Repeated subtraction logic", "Repeated addition logic", "Last-digit 0/5 trick", "Could not solve"]
       },
       {
         id: "q7",
         phase: "8.5–9.5m",
-        title: "Q7. Logic / Coding — Remove Duplicates in Single Iteration",
-        prompt: "Given the list {1, 2, 4, 5, 1, 6, 4, 8, 9, 9}, how do you remove duplicates in a single pass (or without single pass) in any language?",
+        title: "Q7. Logic / Coding — Remove Duplicates from {1,2,4,5,1,6,4,8,9,9}",
+        prompt: "Given the list {1, 2, 4, 5, 1, 6, 4, 8, 9, 9}, how do you remove duplicates in a single iteration (O(n) Set/HashMap) vs. without single iteration?",
         cheatSheet: "Walk through the list once while keeping a 'seen' checklist/Set. If a number isn't on the checklist yet, keep it and check it off—giving {1, 2, 4, 5, 6, 8, 9}.",
         quickChips: ["HashSet / dict in 1 pass", "Nested loop / sort (2 pass)", "Syntax struggle", "Non-Tech (AI prompt alt)"]
       },
@@ -935,10 +1016,9 @@
     const FILLER_WORDS = ["um", "uh", "like", "actually", "basically", "you know", "sort of", "kind of", "literally"];
 
     // =========================================================================
-    // APPLICATION STATE (WITH REALISTIC SAMPLE CANDIDATES FOR IMMEDIATE USE)
+    // APPLICATION STATE
     // =========================================================================
     let state = {
-      trackerWebhookUrl: WEBHOOK_URL,
       activePanel: "Panel 1",
       panelEvaluators: {
         "Panel 1": { snr: "Snr Designer 1", int: "Jnr Tech 1" },
@@ -998,22 +1078,49 @@
       weights: { test: 25, ai: 25, snr: 25, int: 25 }
     };
 
-    // Audio & Speech Recognition State
+    // Audio, Sync & Timer State
     let activeSpeechRec = null;
     let activeMediaRecorder = null;
     let activeAudioChunks = [];
     let recordingTargetId = null;
     let speechTimerInterval = null;
     let audioBlobsByCand = {};
+    let isSyncInFlight = false;
     let f2fRetryInterval = null;
 
-    // 10-Min Timer State
     let timerSeconds = 600;
     let timerInterval = null;
     let isTimerRunning = false;
 
     // =========================================================================
-    // INITIALIZATION
+    // WEBHOOK & SESSION PIN HELPERS
+    // =========================================================================
+    function getWebhookUrl() {
+      try {
+        const saved = localStorage.getItem(WEBHOOK_STORAGE_KEY);
+        if (saved && saved.trim()) return saved.trim();
+      } catch (e) {}
+      return DEFAULT_WEBHOOK_URL;
+    }
+
+    function getSessionPin() {
+      try {
+        return sessionStorage.getItem(SESSION_PIN_KEY) || "";
+      } catch (e) {
+        return "";
+      }
+    }
+
+    function getGeminiKey() {
+      try {
+        return localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+      } catch (e) {
+        return "";
+      }
+    }
+
+    // =========================================================================
+    // INITIALIZATION & IMMEDIATE BLUR LOCK GATE
     // =========================================================================
     window.onload = function () {
       try {
@@ -1026,18 +1133,117 @@
         }
       } catch (e) {}
 
-      if (!state.trackerWebhookUrl) state.trackerWebhookUrl = WEBHOOK_URL;
-      const whInput = document.getElementById("trackerWebhookInput");
-      if (whInput) whInput.value = state.trackerWebhookUrl;
+      const wh = getWebhookUrl();
+      const lockWh = document.getElementById("lockScreenWebhookInput");
+      const rosterWh = document.getElementById("trackerWebhookInput");
+      const settingsWh = document.getElementById("settingsWebhookInput");
+      if (lockWh) lockWh.value = wh;
+      if (rosterWh) rosterWh.value = wh;
+      if (settingsWh) settingsWh.value = wh;
+
+      const gKey = getGeminiKey();
+      const settingsGk = document.getElementById("settingsGeminiKeyInput");
+      if (settingsGk) settingsGk.value = gKey;
 
       applyPanelTheme(state.activePanel || "Panel 1");
       switchMainTab(state.activeTab || "interview");
       renderAll();
 
-      // Auto-sync candidates from Tab 1 of Google Sheet on load + flush queued F2F rows
-      fetchCandidatesFromGoogleSheet(true);
-      flushPendingF2FQueue();
+      // Check if this browser session already verified the PIN
+      const existingPin = getSessionPin();
+      if (existingPin) {
+        liftBlurLock();
+        fetchCandidatesFromGoogleSheet(true);
+        flushPendingF2FQueue();
+      } else {
+        lockPanelScreen();
+        setTimeout(() => {
+          const pinInput = document.getElementById("pinUnlockInput");
+          if (pinInput) pinInput.focus();
+        }, 120);
+      }
     };
+
+    function lockPanelScreen() {
+      try { sessionStorage.removeItem(SESSION_PIN_KEY); } catch (e) {}
+      const shell = document.getElementById("appShell");
+      const overlay = document.getElementById("pinLockOverlay");
+      if (shell) shell.classList.add("locked-blur");
+      if (overlay) overlay.style.display = "flex";
+      const pinInput = document.getElementById("pinUnlockInput");
+      if (pinInput) {
+        pinInput.value = "";
+        pinInput.focus();
+      }
+    }
+
+    function liftBlurLock() {
+      const shell = document.getElementById("appShell");
+      const overlay = document.getElementById("pinLockOverlay");
+      if (shell) shell.classList.remove("locked-blur");
+      if (overlay) overlay.style.display = "none";
+    }
+
+    async function verifyAndUnlockPanel() {
+      const pinInput = document.getElementById("pinUnlockInput");
+      const lockWhInput = document.getElementById("lockScreenWebhookInput");
+      const errBanner = document.getElementById("pinErrorBanner");
+      const btn = document.getElementById("btnUnlockPanel");
+      const offlineBtn = document.getElementById("btnOfflineFallbackUnlock");
+
+      const enteredPin = (pinInput?.value || "").trim();
+      if (!enteredPin) {
+        errBanner.textContent = "Please enter the Panel Access PIN.";
+        errBanner.classList.remove("hidden");
+        return;
+      }
+
+      if (lockWhInput && lockWhInput.value.trim()) {
+        updateTrackerWebhook(lockWhInput.value.trim(), true);
+      }
+
+      const url = getWebhookUrl();
+      errBanner.classList.add("hidden");
+      offlineBtn.classList.add("hidden");
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin">⏳</span> Verifying PIN with Google Sheet...`;
+
+      try {
+        const resp = await fetch(`${url}?pin=${encodeURIComponent(enteredPin)}&t=${Date.now()}`, { method: "GET" });
+        const data = await resp.json();
+
+        if (data && data.result === "success") {
+          try { sessionStorage.setItem(SESSION_PIN_KEY, enteredPin); } catch (e) {}
+          liftBlurLock();
+          ingestSheetCandidates(data.candidates || [], false);
+          flushPendingF2FQueue();
+          showToast("Panel unlocked & synced with Google Sheet!", "🔓");
+        } else {
+          errBanner.textContent = data?.message || "❌ Invalid Panel PIN. Access denied.";
+          errBanner.classList.remove("hidden");
+          pinInput.value = "";
+          pinInput.focus();
+        }
+      } catch (err) {
+        errBanner.textContent = "⚠️ Could not reach Google Apps Script (check internet or Web App deployment).";
+        errBanner.classList.remove("hidden");
+        offlineBtn.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>🔓 Unlock Panel &amp; Load Sheet</span>`;
+      }
+    }
+
+    function unlockOfflineFallback() {
+      const enteredPin = (document.getElementById("pinUnlockInput")?.value || "").trim();
+      if (enteredPin.length < 4) {
+        showToast("Enter at least a 4-digit PIN for offline mode.", "⚠️");
+        return;
+      }
+      try { sessionStorage.setItem(SESSION_PIN_KEY, enteredPin); } catch (e) {}
+      liftBlurLock();
+      showToast("Unlocked in Offline Mode (will auto-sync when online).", "⚡");
+    }
 
     function persistState() {
       try {
@@ -1090,13 +1296,11 @@
       const theme = PANEL_THEMES[panelName] || PANEL_THEMES["Panel 1"];
       const evalPair = state.panelEvaluators[panelName] || { snr: "Snr Designer", int: "Jnr Tech" };
 
-      // Update Header & Strip colors
       document.getElementById("headerPanelBadge").textContent = panelName;
       document.getElementById("headerPanelBadge").className = `px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${theme.headerBadge}`;
       document.getElementById("brandLogoBox").className = `w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-xl shadow-inner transition-colors ${theme.logo}`;
       document.getElementById("panelStripContainer").className = `border-t transition-colors ${theme.strip}`;
 
-      // Update Panel Buttons
       Object.keys(PANEL_THEMES).forEach(p => {
         const btn = document.getElementById("panelBtn_" + p);
         if (!btn) return;
@@ -1107,11 +1311,9 @@
         }
       });
 
-      // Populate Evaluator Name Inputs
       document.getElementById("panelSnrNameInput").value = evalPair.snr;
       document.getElementById("panelIntNameInput").value = evalPair.int;
 
-      // Update Active Candidate Card Accent & Roster Note
       document.getElementById("activePanelPill").textContent = panelName;
       document.getElementById("activePanelPill").className = `px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold ${theme.pill}`;
       document.getElementById("candidateHeroCard").className = `bg-white rounded-2xl border-2 p-4 shadow-sm transition-colors ${theme.cardBorder}`;
@@ -1217,91 +1419,115 @@
     // =========================================================================
     // TWO-WAY GOOGLE SHEET SYNC (INBOUND CANDIDATES + OUTBOUND F2F RESULTS)
     // =========================================================================
-    function updateTrackerWebhook(url) {
-      state.trackerWebhookUrl = (url || "").trim() || WEBHOOK_URL;
-      persistState();
-      showToast("Tracker webhook updated", "🔗");
+    function updateTrackerWebhook(url, silent = false) {
+      const clean = (url || "").trim() || DEFAULT_WEBHOOK_URL;
+      try { localStorage.setItem(WEBHOOK_STORAGE_KEY, clean); } catch (e) {}
+      const lockWh = document.getElementById("lockScreenWebhookInput");
+      const rosterWh = document.getElementById("trackerWebhookInput");
+      const settingsWh = document.getElementById("settingsWebhookInput");
+      if (lockWh) lockWh.value = clean;
+      if (rosterWh) rosterWh.value = clean;
+      if (settingsWh) settingsWh.value = clean;
+      if (!silent) showToast("Google Sheet Webhook URL saved", "🔗");
+    }
+
+    function saveGeminiKey(val) {
+      try { localStorage.setItem(GEMINI_KEY_STORAGE, (val || "").trim()); } catch (e) {}
+      showToast("Gemini API key saved locally", "🔑");
     }
 
     async function fetchCandidatesFromGoogleSheet(isSilent = false) {
-      const url = state.trackerWebhookUrl || WEBHOOK_URL;
+      const pin = getSessionPin();
+      if (!pin) {
+        lockPanelScreen();
+        return;
+      }
+
+      const url = getWebhookUrl();
       const indicator = document.getElementById("sheetSyncIndicator");
       if (indicator) indicator.textContent = "⏳ Syncing Sheet...";
 
       try {
-        const resp = await fetch(`${url}?action=getCandidates&t=${Date.now()}`, { method: "GET" });
+        const resp = await fetch(`${url}?pin=${encodeURIComponent(pin)}&t=${Date.now()}`, { method: "GET" });
         const data = await resp.json();
 
         if (data && data.result === "success" && Array.isArray(data.candidates)) {
-          const excludeDisq = document.getElementById("chkExcludeDisqualified")?.checked ?? true;
-          const latestByRef = {};
-          data.candidates.forEach(item => {
-            const ref = String(item.refId || "").trim();
-            if (ref) latestByRef[ref] = item;
-          });
-
-          let added = 0;
-          let updated = 0;
-
-          Object.values(latestByRef).forEach(item => {
-            const statusUpper = String(item.status || "").toUpperCase();
-            if (excludeDisq && statusUpper.includes("DISQUALIFIED")) return;
-
-            const profile = String(item.profile || "").toUpperCase().includes("NON-TECH") ? "NON-TECH" : "TECH";
-            const score = Math.min(30, Math.max(0, Number(item.score) || 0));
-
-            const existing = state.candidates.find(c => c.refId.toLowerCase() === item.refId.toLowerCase());
-            if (existing) {
-              existing.name = item.name || existing.name;
-              existing.degree = item.graduation || existing.degree;
-              existing.profile = profile;
-              existing.assessmentScore = score;
-              updated++;
-            } else {
-              // Replace placeholder demo candidates once live sheet rows arrive
-              state.candidates = state.candidates.filter(c => !c.id.startsWith("c_demo_"));
-              const activeP = state.activePanel || "Panel 1";
-              const evalPair = state.panelEvaluators[activeP] || { snr: "Snr Designer 1", int: "Jnr Tech 1" };
-
-              state.candidates.push({
-                id: "c_sheet_" + item.refId.replace(/[^a-zA-Z0-9]/g, ""),
-                refId: item.refId,
-                name: item.name,
-                degree: item.graduation || "Graduate",
-                profile,
-                panelPod: activeP,
-                assessmentScore: score,
-                verdict: "Pending",
-                submitted: false,
-                snrJudge: evalPair.snr,
-                intJudge: evalPair.int,
-                snrRatings: [0, 0, 0, 0],
-                snrNotes: "",
-                intRatings: [0, 0, 0, 0],
-                intNotes: "",
-                notes: {},
-                speechSeconds: 0,
-                aiAnalysis: null
-              });
-              added++;
-            }
-          });
-
-          if (state.candidates.length > 0 && !state.candidates.some(c => c.id === state.activeId)) {
-            state.activeId = state.candidates[0].id;
-          }
-
-          persistState();
-          renderAll();
-          if (indicator) indicator.textContent = `● Tracker Synced (${state.candidates.length})`;
-          if (!isSilent) showToast(`Synced from Google Sheet: ${added} new, ${updated} updated`, "🔄");
+          ingestSheetCandidates(data.candidates, isSilent);
+        } else if (data && String(data.message || "").includes("Unauthorized")) {
+          lockPanelScreen();
+          showToast("Session PIN expired or invalid. Please re-enter PIN.", "🔒");
         } else {
-          throw new Error("doGet endpoint not found");
+          throw new Error("Unexpected sheet response");
         }
       } catch (err) {
         if (indicator) indicator.textContent = "● Offline / Walk-In Ready";
-        if (!isSilent) showToast("Using local roster (ensure doGet is deployed in Code.gs for live sheet pull).", "ℹ️");
+        if (!isSilent) showToast("Could not reach sheet—using local roster.", "⚠️");
       }
+    }
+
+    function ingestSheetCandidates(rawList, isSilent) {
+      const showDisq = document.getElementById("chkShowDisqualified")?.checked ?? false;
+      const latestByRef = {};
+      rawList.forEach(item => {
+        const ref = String(item.refId || "").trim();
+        if (ref) latestByRef[ref] = item;
+      });
+
+      let added = 0;
+      let updated = 0;
+
+      Object.values(latestByRef).forEach(item => {
+        const statusUpper = String(item.status || "").toUpperCase();
+        if (!showDisq && statusUpper.includes("DISQUALIFIED")) return;
+
+        const profile = String(item.profile || "").toUpperCase().includes("NON-TECH") ? "NON-TECH" : "TECH";
+        const score = Math.min(30, Math.max(0, Number(item.score) || 0));
+
+        const existing = state.candidates.find(c => c.refId.toLowerCase() === item.refId.toLowerCase());
+        if (existing) {
+          existing.name = item.name || existing.name;
+          existing.degree = item.graduation || existing.degree;
+          existing.profile = profile;
+          existing.assessmentScore = score;
+          updated++;
+        } else {
+          state.candidates = state.candidates.filter(c => !c.id.startsWith("c_demo_"));
+          const activeP = state.activePanel || "Panel 1";
+          const evalPair = state.panelEvaluators[activeP] || { snr: "Snr Designer 1", int: "Jnr Tech 1" };
+
+          state.candidates.push({
+            id: "c_sheet_" + item.refId.replace(/[^a-zA-Z0-9]/g, ""),
+            refId: item.refId,
+            name: item.name,
+            degree: item.graduation || "Graduate",
+            profile,
+            panelPod: activeP,
+            assessmentScore: score,
+            verdict: "Pending",
+            submitted: false,
+            snrJudge: evalPair.snr,
+            intJudge: evalPair.int,
+            snrRatings: [0, 0, 0, 0],
+            snrNotes: "",
+            intRatings: [0, 0, 0, 0],
+            intNotes: "",
+            notes: {},
+            speechSeconds: 0,
+            aiAnalysis: null
+          });
+          added++;
+        }
+      });
+
+      if (state.candidates.length > 0 && !state.candidates.some(c => c.id === state.activeId)) {
+        state.activeId = state.candidates[0].id;
+      }
+
+      persistState();
+      renderAll();
+      const indicator = document.getElementById("sheetSyncIndicator");
+      if (indicator) indicator.textContent = `● Tracker Synced (${state.candidates.length})`;
+      if (!isSilent) showToast(`Synced from Google Sheet: ${added} new, ${updated} updated`, "🔄");
     }
 
     function buildF2FSheetPayload(cand) {
@@ -1323,12 +1549,12 @@
 
       return {
         action: "saveF2FInterview",
+        panelPin: getSessionPin(),
         timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
         refId: cand.refId,
         name: cand.name,
         graduation: cand.degree,
         profile: cand.profile,
-        panelPod: panelName,
         pod: panelName,
         snrJudge: cand.snrJudge || evalPair.snr,
         intJudge: cand.intJudge || evalPair.int,
@@ -1361,6 +1587,7 @@
     }
 
     function flushPendingF2FQueue() {
+      if (isSyncInFlight) return;
       const statusEl = document.getElementById("f2fSheetPushStatus");
       let queue = [];
       try {
@@ -1377,8 +1604,10 @@
         return;
       }
 
-      const url = state.trackerWebhookUrl || WEBHOOK_URL;
+      isSyncInFlight = true;
+      const url = getWebhookUrl();
       const itemToSend = queue[0];
+      if (!itemToSend.panelPin) itemToSend.panelPin = getSessionPin();
 
       fetch(url, {
         method: "POST",
@@ -1387,6 +1616,7 @@
         body: JSON.stringify(itemToSend)
       })
       .then(() => {
+        isSyncInFlight = false;
         try {
           const latestRaw = localStorage.getItem(F2F_PENDING_SYNC_KEY);
           const latestQueue = latestRaw ? JSON.parse(latestRaw) : [];
@@ -1401,6 +1631,7 @@
         } catch (e) {}
       })
       .catch(() => {
+        isSyncInFlight = false;
         if (statusEl) statusEl.innerHTML = `<span class="text-amber-700 font-bold">⚠️ Weak signal — auto-retrying push every 5s...</span>`;
         if (f2fRetryInterval) clearInterval(f2fRetryInterval);
         f2fRetryInterval = setInterval(flushPendingF2FQueue, 5000);
@@ -1586,7 +1817,7 @@
     }
 
     // =========================================================================
-    // MASTER RENDERING (MAIN WORKSPACE, ROSTER TAB & LEADERBOARD TAB)
+    // MASTER RENDERING
     // =========================================================================
     function renderAll() {
       document.getElementById("rosterCountBadge").textContent = state.candidates.length;
@@ -1606,7 +1837,6 @@
       const activeP = state.activePanel || cand.panelPod || "Panel 1";
       const evalPair = state.panelEvaluators[activeP] || { snr: "Snr Designer", int: "Jnr Tech" };
 
-      // Candidate Selector Dropdown
       const qSelect = document.getElementById("quickSwitchCandidateSelect");
       qSelect.innerHTML = state.candidates.map(c =>
         `<option value="${c.id}" ${c.id === cand.id ? "selected" : ""}>${escapeHtml(c.name)} (${escapeHtml(c.refId)})</option>`
@@ -1905,7 +2135,7 @@
           <td class="py-3 px-3">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
               cand.submitted ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-            }">${cand.submitted ? "Completed ✓" : "Pending"}</span>
+            }">${cand.submitted ? "Evaluated ✓" : "Pending"}</span>
           </td>
           <td class="py-3 px-3 text-right">
             <button onclick="launchCandidateInterview('${cand.id}')" class="px-3 py-1.5 rounded-xl bg-[#2563eb] hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition">
@@ -2096,7 +2326,7 @@
     }
 
     // =========================================================================
-    // GEMINI AI AUDIO & Q&A EVALUATION (WITH EXPONENTIAL BACKOFF)
+    // GEMINI AI AUDIO & Q&A EVALUATION (WITH SMART LOCAL RUBRIC FALLBACK)
     // =========================================================================
     async function analyzeInterviewWithGemini() {
       if (recordingTargetId) stopActiveRecording();
@@ -2110,6 +2340,16 @@
         const ans = (cand.notes && cand.notes[q.id]) ? cand.notes[q.id] : "No response recorded";
         return `${q.title}\nQuestion: ${q.prompt}\nCandidate Answer / Notes: ${ans}`;
       }).join("\n\n");
+
+      const activeKey = getGeminiKey();
+
+      if (!activeKey) {
+        await new Promise(r => setTimeout(r, 450));
+        runDeterministicRubricFallback(cand, tel);
+        btn.disabled = false;
+        btn.innerHTML = `<span>✨ Analyze Audio &amp; Answers with Gemini AI</span>`;
+        return;
+      }
 
       const systemPrompt = `You are an expert Hiring Evaluator for Simplilearn's Intern drive (selecting 7-10 interns who will build interactive labs, AI-assisted scenarios, course launches, and LMS operations).
 Analyze BOTH:
@@ -2164,7 +2404,7 @@ ${transcriptLines}`;
         }
       };
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(activeKey)}`;
 
       try {
         const response = await fetchWithBackoff(apiUrl, {
@@ -2185,7 +2425,7 @@ ${transcriptLines}`;
           contentScore: cScore,
           commScore: vScore,
           score: combined,
-          fitTag: parsed.fitTag || "AI Evaluated",
+          fitTag: parsed.fitTag || "Gemini Evaluated",
           summary: parsed.summary || "",
           strengths: parsed.strengths || "",
           commNotes: parsed.commNotes || "",
@@ -2195,28 +2435,42 @@ ${transcriptLines}`;
         renderAll();
         showToast("Gemini AI Answer & Communication analysis complete!", "✨");
       } catch (err) {
-        const filledCount = INTERVIEW_QUESTIONS.filter(q => cand.notes && cand.notes[q.id] && cand.notes[q.id].trim().length > 2).length;
-        const cScore = Math.min(95, Math.max(40, Math.round((filledCount / 8) * 85)));
-        const vScore = Math.min(95, Math.max(50, 82 - (tel.fillerCount * 3)));
-        const combined = Math.round((cScore + vScore) / 2);
-
-        cand.aiAnalysis = {
-          contentScore: cScore,
-          commScore: vScore,
-          score: combined,
-          fitTag: cand.profile === "TECH" ? "Tech Track (Local Rubric)" : "Design/Ops Track (Local Rubric)",
-          summary: `Evaluated ${filledCount}/8 interview checkpoints locally (${tel.wordCount} words captured, ${tel.fillerCount} filler words).`,
-          strengths: "Completed structured 8-question walkthrough",
-          commNotes: `Pace ~${tel.wpm} WPM • ${tel.fillerCount} filler words detected`,
-          gaps: "Connect to live Gemini API key for deep multimodal review"
-        };
-        persistState();
-        renderAll();
-        showToast("Generated rubric & speech telemetry score", "⚡");
+        runDeterministicRubricFallback(cand, tel);
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<span>✨ Analyze Audio &amp; Answers with Gemini AI</span>`;
       }
+    }
+
+    function runDeterministicRubricFallback(cand, tel) {
+      const notes = cand.notes || {};
+      const allLower = Object.values(notes).join(" ").toLowerCase();
+      const filledCount = INTERVIEW_QUESTIONS.filter(q => notes[q.id] && notes[q.id].trim().length > 2).length;
+
+      const techHits = ["json", "env", "yaml", "postman", "200", "status", "semantic", "html", "subtract", "set", "hash", "o(n)", "dict", "inward", "room"]
+        .filter(kw => allLower.includes(kw)).length;
+
+      const baseCoverage = Math.round((filledCount / 8) * 65);
+      const keywordBonus = Math.min(30, techHits * 4);
+      const cScore = Math.min(96, Math.max(35, baseCoverage + keywordBonus));
+
+      const paceBonus = (tel.wpm >= 95 && tel.wpm <= 165) ? 10 : 0;
+      const vScore = Math.min(96, Math.max(45, 76 + paceBonus - (tel.fillerCount * 3)));
+      const combined = Math.round((cScore + vScore) / 2);
+
+      cand.aiAnalysis = {
+        contentScore: cScore,
+        commScore: vScore,
+        score: combined,
+        fitTag: cand.profile === "TECH" ? "Tech Track (Rubric AI)" : "Design/Ops Track (Rubric AI)",
+        summary: `Evaluated ${filledCount}/8 checkpoints (${techHits} key concept hits, ${tel.wordCount} words captured).`,
+        strengths: techHits >= 3 ? "Demonstrated strong conceptual vocabulary across core checkpoints" : "Completed structured interview walkthrough",
+        commNotes: `Speaking pace ~${tel.wpm} WPM • ${tel.fillerCount} filler words detected`,
+        gaps: filledCount < 6 ? "Some interview questions had brief or unrecorded responses" : "Verify depth against Snr Designer & Jnr Tech scores"
+      };
+      persistState();
+      renderAll();
+      showToast("Rubric & speech telemetry evaluation complete!", "⚡");
     }
 
     async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
@@ -2231,7 +2485,7 @@ ${transcriptLines}`;
     }
 
     // =========================================================================
-    // QUICK WALK-IN ENTRY, TSV PASTE IMPORT, WEIGHTS & CSV EXPORT
+    // QUICK WALK-IN ENTRY, TSV PASTE IMPORT, SETTINGS & CSV EXPORT
     // =========================================================================
     function openQuickWalkInModal() {
       document.getElementById("newCandRef").value = "SL-" + Math.floor(1000 + Math.random() * 9000);
@@ -2343,17 +2597,19 @@ ${transcriptLines}`;
       showToast(`Imported ${addedCount} candidates from pasted rows`, "📥");
     }
 
-    function openWeightModal() {
+    function openSettingsModal() {
+      document.getElementById("settingsWebhookInput").value = getWebhookUrl();
+      document.getElementById("settingsGeminiKeyInput").value = getGeminiKey();
       document.getElementById("wSliderTest").value = state.weights.test;
       document.getElementById("wSliderAi").value = state.weights.ai;
       document.getElementById("wSliderSnr").value = state.weights.snr;
       document.getElementById("wSliderInt").value = state.weights.int;
       updateWeightsUI();
-      document.getElementById("weightModal").classList.remove("hidden");
+      document.getElementById("settingsModal").classList.remove("hidden");
     }
 
-    function closeWeightModal() {
-      document.getElementById("weightModal").classList.add("hidden");
+    function closeSettingsModal() {
+      document.getElementById("settingsModal").classList.add("hidden");
     }
 
     function updateWeightsUI() {
@@ -2373,7 +2629,7 @@ ${transcriptLines}`;
 
     function resetDefaultWeights() {
       state.weights = { test: 25, ai: 25, snr: 25, int: 25 };
-      openWeightModal();
+      openSettingsModal();
     }
 
     function exportToCSV() {
