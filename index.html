@@ -1076,6 +1076,7 @@
     var startTimeMs = 0;
     var timerInterval = null;
     var retrySyncInterval = null;
+    var isSyncInFlight = false;
     var remainingSeconds = 1800;
 
     var secretTapCount = 0;
@@ -1701,11 +1702,13 @@
     }
 
     function attemptWebhookPush(payload) {
+      if (isSyncInFlight) return;
       if (navigator.onLine === false) {
         updateSyncLabels("Offline — Waiting for Signal (Auto-retrying...)", "#d97706");
         return;
       }
 
+      isSyncInFlight = true;
       fetch(WEBHOOK_URL, {
         method: "POST",
         mode: "no-cors",
@@ -1713,6 +1716,7 @@
         body: JSON.stringify(payload)
       })
       .then(function () {
+        isSyncInFlight = false;
         try {
           localStorage.removeItem(PENDING_SYNC_KEY);
         } catch (e) {}
@@ -1722,6 +1726,7 @@
         if (btn) btn.style.display = "none";
       })
       .catch(function () {
+        isSyncInFlight = false;
         updateSyncLabels("Weak Signal — Auto-retrying every 5s...", "#d97706");
       });
     }
