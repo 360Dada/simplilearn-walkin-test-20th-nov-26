@@ -74,23 +74,6 @@
           />
         </div>
 
-        <details class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3 text-xs">
-          <summary class="cursor-pointer font-semibold text-slate-400 hover:text-slate-200 select-none">
-            Apps Script Webhook Endpoint
-          </summary>
-          <div class="mt-2.5 space-y-1.5">
-            <label for="lockWebhookInput" class="block text-[10px] font-bold uppercase text-slate-500">
-              Google Apps Script /exec URL
-            </label>
-            <input
-              id="lockWebhookInput"
-              type="url"
-              placeholder="https://script.google.com/macros/s/.../exec"
-              class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-[11px] text-slate-200 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-        </details>
-
         <div id="pinErrorBox" class="hidden p-3 rounded-xl bg-rose-950/90 border border-rose-700/70 text-rose-200 text-xs font-semibold"></div>
 
         <button
@@ -99,7 +82,7 @@
           onclick="verifyAndUnlockPanel()"
           class="w-full py-3.5 px-5 rounded-2xl bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white font-extrabold text-sm shadow-lg transition flex items-center justify-center gap-2"
         >
-          <span>Unlock Panel &amp; Sync Candidates</span>
+          <span>Unlock Panel &amp; Sync Sheet</span>
         </button>
       </div>
     </div>
@@ -146,14 +129,14 @@
             onclick="openSettingsModal()"
             class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition"
           >
-            API &amp; Webhook
+            🔑 Gemini Key
           </button>
           <button
             type="button"
             onclick="lockPanelScreen()"
             class="px-3 py-1.5 rounded-xl bg-rose-950/90 hover:bg-rose-900 border border-rose-800/80 text-xs font-extrabold text-rose-200 transition"
           >
-            Lock Panel
+            🔒 Lock Panel
           </button>
         </div>
       </div>
@@ -780,16 +763,61 @@
   <!-- ===================================================================== -->
   <!-- 5. JAVASCRIPT APPLICATION LOGIC                                       -->
   <!-- ===================================================================== -->
+  <!-- 4. OPTIONAL GEMINI API KEY MODAL                                      -->
+  <!-- ===================================================================== -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-40 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 class="text-sm font-extrabold">AI Engine Configuration (Optional Gemini Key)</h3>
+        <button type="button" onclick="closeSettingsModal()" class="text-slate-400 hover:text-white text-lg font-bold px-2">&times;</button>
+      </div>
+      <div class="p-6 space-y-4 text-xs">
+        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-semibold">
+          Google Sheet Tracker is permanently auto-linked to your deployed Apps Script backend.
+        </div>
+
+        <div>
+          <label for="settingsGeminiKeyInput" class="block font-extrabold text-slate-700 mb-1">
+            Optional Gemini API Key (gemini-2.5-flash)
+          </label>
+          <input
+            id="settingsGeminiKeyInput"
+            type="password"
+            placeholder="AIzaSy... (Leave blank to use built-in rubric engine)"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-blue-600"
+          />
+          <p class="text-[11px] text-slate-500 mt-1">If left blank, the built-in rubric &amp; speech-fluency analyzer evaluates transcripts automatically.</p>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">
+            Cancel
+          </button>
+          <button type="button" onclick="saveSettingsModal()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold">
+            Save Key
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION BANNER -->
+  <div id="toastBanner" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white border border-slate-700 px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2">
+    <span id="toastText">Saved</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 5. JAVASCRIPT APPLICATION LOGIC                                       -->
+  <!-- ===================================================================== -->
   <script>
     // =========================================================================
-    // CONFIGURATION & STORAGE KEYS
+    // HARDCODED GOOGLE APPS SCRIPT BACKEND & STORAGE KEYS
     // =========================================================================
-    const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbx_REPLACE_WITH_YOUR_DEPLOYED_WEB_APP_ID/exec";
-    const STORAGE_KEY_STATE = "simplilearn_f2f_state_v6";
-    const STORAGE_KEY_WEBHOOK = "simplilearn_f2f_webhook_v6";
-    const STORAGE_KEY_GEMINI = "simplilearn_f2f_gemini_v6";
-    const SESSION_KEY_PIN = "simplilearn_f2f_verified_pin_v6";
-    const F2F_PENDING_SYNC_KEY = "simplilearn_f2f_pending_queue_v6";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcnildeWJka3_Ry0vJnf77SRzX_38YLiyaU7KeSTjWYAUwsg0kKkS1BXN3A4iWK1fh/exec";
+    const STORAGE_KEY_STATE = "simplilearn_f2f_state_v7";
+    const STORAGE_KEY_GEMINI = "simplilearn_f2f_gemini_v7";
+    const SESSION_KEY_PIN = "simplilearn_f2f_verified_pin_v7";
+    const F2F_PENDING_SYNC_KEY = "simplilearn_f2f_pending_queue_v7";
 
     // HARD-CODED IMMUTABLE PANEL ASSIGNMENTS (PANEL 01 TO PANEL 06)
     const FIXED_PANELS = Object.freeze({
@@ -800,263 +828,10 @@
       "Panel 05": Object.freeze({ snr: "Roop", int: "Abhinav", shortLabel: "Panel 05 • Roop & Abhinav" }),
       "Panel 06": Object.freeze({ snr: "None / Solo", int: "Aarushi", shortLabel: "Panel 06 • Aarushi (Tech)" })
     });
-
-    const PANEL_THEMES = {
-      "Panel 01": {
-        pill: "bg-blue-600 text-white",
-        headerBadge: "bg-blue-500/20 text-blue-300 border-blue-400/40",
-        strip: "bg-blue-950/90 border-blue-800/60",
-        logo: "bg-blue-600",
-        cardBorder: "border-blue-300",
-        activeBtn: "bg-blue-600 text-white shadow"
-      },
-      "Panel 02": {
-        pill: "bg-emerald-600 text-white",
-        headerBadge: "bg-emerald-500/20 text-emerald-300 border-emerald-400/40",
-        strip: "bg-emerald-950/90 border-emerald-800/60",
-        logo: "bg-emerald-600",
-        cardBorder: "border-emerald-300",
-        activeBtn: "bg-emerald-600 text-white shadow"
-      },
-      "Panel 03": {
-        pill: "bg-purple-600 text-white",
-        headerBadge: "bg-purple-500/20 text-purple-300 border-purple-400/40",
-        strip: "bg-purple-950/90 border-purple-800/60",
-        logo: "bg-purple-600",
-        cardBorder: "border-purple-300",
-        activeBtn: "bg-purple-600 text-white shadow"
-      },
-      "Panel 04": {
-        pill: "bg-amber-600 text-white",
-        headerBadge: "bg-amber-500/20 text-amber-300 border-amber-400/40",
-        strip: "bg-amber-950/90 border-amber-800/60",
-        logo: "bg-amber-600",
-        cardBorder: "border-amber-300",
-        activeBtn: "bg-amber-600 text-white shadow"
-      },
-      "Panel 05": {
-        pill: "bg-rose-600 text-white",
-        headerBadge: "bg-rose-500/20 text-rose-300 border-rose-400/40",
-        strip: "bg-rose-950/90 border-rose-800/60",
-        logo: "bg-rose-600",
-        cardBorder: "border-rose-300",
-        activeBtn: "bg-rose-600 text-white shadow"
-      },
-      "Panel 06": {
-        pill: "bg-cyan-600 text-white",
-        headerBadge: "bg-cyan-500/20 text-cyan-300 border-cyan-400/40",
-        strip: "bg-cyan-950/90 border-cyan-800/60",
-        logo: "bg-cyan-600",
-        cardBorder: "border-cyan-300",
-        activeBtn: "bg-cyan-600 text-white shadow"
-      }
-    };
-
-    // 8 STRUCTURED INTERVIEW QUESTIONS + SENIOR DESIGNER CHEAT SHEETS
-    const INTERVIEW_QUESTIONS = [
-      {
-        id: "q1",
-        num: "Q1",
-        title: "About Company — What did you research about Simplilearn?",
-        tag: "Preparation & Motivation",
-        promptHint: "Checks if they researched Simplilearn's digital upskilling bootcamps, AI/Tech domains, and mission.",
-        cheatSheet: "Look for: Knows Simplilearn is an online upskilling/bootcamp leader (AI, Data Science, Cloud, Dev). Bonus if they connect their interest to building hands-on courses for learners.",
-        keywords: ["upskilling", "bootcamp", "online", "courses", "learners", "ai", "data", "skills", "certification"]
-      },
-      {
-        id: "q2",
-        num: "Q2",
-        title: "Self-Intro & Project Walkthrough (Confidence & End-User Clarity)",
-        tag: "Confidence & Storytelling",
-        promptHint: "Ask them to explain a project they built as if explaining it to a non-technical end user.",
-        cheatSheet: "Key for Snr Designer: Can they explain a technical project simply without jargon? Clear problem -> their exact role -> end-user impact predicts strong course scenario writing.",
-        keywords: ["problem", "user", "built", "role", "feature", "result", "designed", "tested", "workflow"]
-      },
-      {
-        id: "q3",
-        num: "Q3",
-        title: "What is a Config File? Why and where do we use it in applications?",
-        tag: "Architecture & LMS Setup",
-        promptHint: "Expected: .json / .yaml / .env / .xml storing environment settings, API keys, and feature flags outside code.",
-        cheatSheet: "Plain English: A settings file (like .env or config.json) kept separate from main code so teams can switch between Test and Live servers or update API keys without rewriting code.",
-        keywords: ["json", "env", "yaml", "xml", "settings", "environment", "keys", "without changing code", "production", "variables"]
-      },
-      {
-        id: "q4",
-        num: "Q4",
-        title: "What is an API? How do we perform API testing?",
-        tag: "Backend & Integrations",
-        promptHint: "Expected: Messenger/contract between systems; tested via Postman/curl checking GET/POST & HTTP status codes (200, 400, 401, 500).",
-        cheatSheet: "Plain English: An API is a waiter/messenger letting two apps talk (e.g., LMS talking to an AI grader). Testing it means sending sample requests in Postman and checking status codes (200 = OK, 404 = Not Found, 500 = Error).",
-        keywords: ["interface", "request", "response", "postman", "get", "post", "status", "200", "400", "401", "500", "json", "endpoint"]
-      },
-      {
-        id: "q5",
-        num: "Q5",
-        title: "How is Designing related to UI Development? + Basic HTML & Landing Pages",
-        tag: "Course Landing Pages",
-        promptHint: "Ask how Figma/UI design translates into semantic HTML (<header>, <section>, <form>, <iframe>) for course pages.",
-        cheatSheet: "Plain English: Design (Figma) is the visual blueprint and learner flow; UI Development turns that blueprint into live web pages using HTML (structure), CSS (style), and JS (interactivity).",
-        keywords: ["figma", "wireframe", "html", "css", "semantic", "header", "section", "responsive", "layout", "user experience"]
-      },
-      {
-        id: "q6",
-        num: "Q6",
-        title: "Divisibility Without / or % (e.g., Check if 40 is divisible by 5)",
-        tag: "Logic Puzzle / Code",
-        promptHint: "Tech: Write logic using repeated subtraction or addition. Non-Tech: Explain the logic verbally.",
-        cheatSheet: "Plain English: Keep subtracting 5 from 40 (40 -> 35 -> 30 ... -> 0). If you land on 0, it is divisible! Or keep adding 5 until you hit 40. (Non-Tech candidates only need to explain this logic verbally.)",
-        keywords: ["subtract", "subtraction", "loop", "while", "zero", "0", "add", "addition", "remainder", "last digit"]
-      },
-      {
-        id: "q7",
-        num: "Q7",
-        title: "Remove Duplicates from {1, 2, 4, 5, 1, 6, 4, 8, 9, 9} in Single Iteration",
-        tag: "Data Structures / Prompting",
-        promptHint: "Tech: Single-pass O(n) using a Set/HashMap. Non-Tech: Ask how they would prompt AI to create 5 practice questions without hallucinations.",
-        cheatSheet: "Plain English (Tech): Keep a 'seen' checklist while scanning the list once; if a number isn't on the checklist, keep it and check it off. (For Non-Tech: Ask how they prevent AI hallucinations using strict source-grounded prompts.)",
-        keywords: ["set", "hash", "map", "dictionary", "seen", "o(n)", "single", "loop", "prompt", "source", "hallucination"]
-      },
-      {
-        id: "q8",
-        num: "Q8",
-        title: "Presence of Mind Check: 'If I ask you to jump from the window, what is your answer?'",
-        tag: "Composure & Wit",
-        promptHint: "Classic presence-of-mind check ('Jump inside towards the room, not outside' or calm logical wit).",
-        cheatSheet: "Look for: Calmness, humor, and lateral thinking (e.g., 'I will jump inward into the room' or 'Which floor are we on?'). Keep this light—use it for composure, not pass/fail.",
-        keywords: ["room", "inside", "inward", "ground", "floor", "browser", "calm", "safe"]
-      }
-    ];
-
-    const SNR_CRITERIA = [
-      { id: "snr_0", label: "Communication, Confidence & Presence", desc: "Clear articulation, active listening, composure" },
-      { id: "snr_1", label: "Project Storytelling & End-User Clarity", desc: "Explains complex ideas simply without jargon" },
-      { id: "snr_2", label: "UI/UX & Learner Experience Empathy", desc: "Understands visual hierarchy, layout & engagement" },
-      { id: "snr_3", label: "Course Launch & Ownership Mindset", desc: "Attention to detail, landing page & LMS readiness" }
-    ];
-
-    const INT_CRITERIA = [
-      { id: "int_0", label: "Technical & Config/API Fundamentals", desc: "Understands config files, APIs, HTTP & systems" },
-      { id: "int_1", label: "Problem-Solving & Algorithmic Logic", desc: "Divisibility without / or %, single-pass deduplication" },
-      { id: "int_2", label: "HTML / Web & Troubleshooting Accuracy", desc: "Semantic HTML, debugging LMS/deployment blockers" },
-      { id: "int_3", label: "AI Content Engineering & Prompt Rigor", desc: "Structured thinking, hallucination & edge-case checks" }
-    ];
-
-    const QUICK_TAGS = [
-      "Clear & Structured",
-      "Strong Tech Depth",
-      "Great Learner Empathy",
-      "Needs Prompting",
-      "Weak / Unclear"
-    ];
-
-    // =========================================================================
-    // APPLICATION STATE
-    // =========================================================================
-    let state = {
-      activePanel: "Panel 01",
-      candidates: [
-        {
-          id: "c_demo_1",
-          refId: "SL-7017",
-          name: "Aarav Sharma (Sample)",
-          degree: "B.Tech CSE",
-          profile: "TECH",
-          panelPod: "Panel 01",
-          assessmentScore: 24,
-          verdict: "Pending",
-          submitted: false,
-          snrJudge: "Athresh",
-          intJudge: "Kesava",
-          snrRatings: [0, 0, 0, 0],
-          snrNotes: "",
-          intRatings: [0, 0, 0, 0],
-          intNotes: "",
-          notes: {},
-          speechSeconds: 0,
-          aiAnalysis: null
-        },
-        {
-          id: "c_demo_2",
-          refId: "SL-7024",
-          name: "Priya Nair (Sample)",
-          degree: "B.Com / BBA",
-          profile: "NON-TECH",
-          panelPod: "Panel 02",
-          assessmentScore: 15,
-          verdict: "Pending",
-          submitted: false,
-          snrJudge: "Gajendra",
-          intJudge: "Karthik",
-          snrRatings: [0, 0, 0, 0],
-          snrNotes: "",
-          intRatings: [0, 0, 0, 0],
-          intNotes: "",
-          notes: {},
-          speechSeconds: 0,
-          aiAnalysis: null
-        }
-      ],
-      activeId: "c_demo_1",
-      activeTab: "interview",
-      leaderboardPanelFilter: "ALL",
-      showCheatSheet: true,
-      weights: { test: 25, ai: 25, snr: 25, int: 25 }
-    };
-
-    // Timer & Speech/Audio Runtime Variables
-    let timerSeconds = 600;
-    let timerInterval = null;
-    let isTimerRunning = false;
-
-    let recognition = null;
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let recordingTargetId = null; // 'session' or 'q1'..'q8'
-    let recordingStartMs = 0;
-    let recordedAudioUrls = {}; // { candId_qId: blobUrl }
-
-    // =========================================================================
-    // HELPER FUNCTIONS
-    // =========================================================================
-    function escapeHtml(str) {
-      return String(str || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-    function normalizePanelKey(pName) {
-      const raw = String(pName || "").trim();
-      if (FIXED_PANELS[raw]) return raw;
-      const numMatch = raw.match(/(\d+)/);
-      if (numMatch) {
-        const padded = "Panel " + numMatch[1].padStart(2, "0");
-        if (FIXED_PANELS[padded]) return padded;
-      }
-      return "Panel 01";
-    }
-
+// ... existing code ... -->
     function getFixedJudgesForPanel(pName) {
       const key = normalizePanelKey(pName);
       return FIXED_PANELS[key] || FIXED_PANELS["Panel 01"];
-    }
-
-    function getWebhookUrl() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY_WEBHOOK);
-        if (saved && saved.startsWith("http")) return saved.trim();
-      } catch (e) {}
-      return DEFAULT_WEBHOOK_URL;
-    }
-
-    function setWebhookUrl(url) {
-      if (!url || !url.startsWith("http")) return;
-      try {
-        localStorage.setItem(STORAGE_KEY_WEBHOOK, url.trim());
-      } catch (e) {}
     }
 
     function getGeminiKey() {
@@ -1066,74 +841,16 @@
         return "";
       }
     }
-
-    function getSessionPin() {
-      try {
-        return (sessionStorage.getItem(SESSION_KEY_PIN) || "").trim();
-      } catch (e) {
-        return "";
-      }
-    }
-
-    function setSessionPin(pin) {
-      try {
-        sessionStorage.setItem(SESSION_KEY_PIN, String(pin || "").trim());
-      } catch (e) {}
-    }
-
-    function showToast(msg, icon) {
-      const banner = document.getElementById("toastBanner");
-      const text = document.getElementById("toastText");
-      if (!banner || !text) return;
-      text.textContent = (icon ? icon + " " : "") + msg;
-      banner.classList.remove("hidden");
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
-        banner.classList.add("hidden");
-      }, 3200);
-    }
-
-    function persistState() {
-      try {
-        localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(state));
-      } catch (e) {}
-    }
-
-    function loadPersistedState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY_STATE);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (parsed && Array.isArray(parsed.candidates) && parsed.candidates.length > 0) {
-          state = { ...state, ...parsed };
-        }
-      } catch (e) {}
-    }
-
-    function getActiveCandidate() {
-      let c = state.candidates.find(item => item.id === state.activeId);
-      if (!c && state.candidates.length > 0) {
-        c = state.candidates[0];
-        state.activeId = c.id;
-      }
-      return c;
-    }
-
+// ... existing code ... -->
     // =========================================================================
-    // PIN LOCK & SERVER-SIDE VERIFICATION (NO HARDCODED PIN IN HTML)
+    // PIN LOCK & SERVER-SIDE VERIFICATION (AUTO-LINKED TO APPS_SCRIPT_URL)
     // =========================================================================
     async function verifyAndUnlockPanel() {
       const pinInput = document.getElementById("pinInput");
-      const hookInput = document.getElementById("lockWebhookInput");
       const errBox = document.getElementById("pinErrorBox");
       const btn = document.getElementById("unlockBtn");
 
       const enteredPin = (pinInput.value || "").trim();
-      const enteredHook = (hookInput.value || "").trim();
-
-      if (enteredHook && enteredHook.startsWith("http")) {
-        setWebhookUrl(enteredHook);
-      }
 
       if (!enteredPin) {
         errBox.textContent = "Please enter the Panel Access PIN.";
@@ -1142,20 +859,14 @@
         return;
       }
 
-      const webhookUrl = getWebhookUrl();
-      if (!webhookUrl || webhookUrl.includes("REPLACE_WITH_YOUR")) {
-        errBox.textContent = "Please expand 'Apps Script Webhook Endpoint' above and paste your deployed Google Apps Script /exec URL first.";
-        errBox.classList.remove("hidden");
-        return;
-      }
-
       errBox.classList.add("hidden");
       btn.disabled = true;
-      btn.innerHTML = "<span>Verifying PIN with Tracker...</span>";
+      btn.innerHTML = "<span>Verifying PIN &amp; Auto-Linking Sheet...</span>";
 
       try {
-        const res = await fetch(`${webhookUrl}?pin=${encodeURIComponent(enteredPin)}`, {
+        const res = await fetch(`${APPS_SCRIPT_URL}?pin=${encodeURIComponent(enteredPin)}&t=${Date.now()}`, {
           method: "GET",
+          redirect: "follow",
           cache: "no-store"
         });
         const data = await res.json();
@@ -1163,9 +874,14 @@
         if (data && data.result === "success") {
           setSessionPin(enteredPin);
           unlockShellUI();
-          ingestSheetCandidates(data.candidates || []);
+          const count = ingestSheetCandidates(data.candidates || []);
+          const badge = document.getElementById("sheetSyncStatusBadge");
+          if (badge) {
+            badge.textContent = `Sheet Auto-Linked ✓ (${count})`;
+            badge.className = "px-2.5 py-1 rounded-xl bg-slate-900 border border-emerald-500/50 text-[11px] font-bold text-emerald-400";
+          }
           flushOfflineQueue();
-          showToast("Panel unlocked & synced with HR Sheet", "🔓");
+          showToast(`Unlocked & auto-linked ${count} candidates from Google Sheet`, "🔓");
         } else {
           errBox.textContent = (data && data.message) ? data.message : "Invalid Panel PIN. Access denied.";
           errBox.classList.remove("hidden");
@@ -1173,49 +889,22 @@
           pinInput.focus();
         }
       } catch (err) {
-        errBox.textContent = "Could not reach Google Sheet webhook. Check your internet connection or Apps Script /exec URL.";
+        errBox.textContent = "Network error reaching Google Apps Script. Please check your internet connection and try again.";
         errBox.classList.remove("hidden");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = "<span>Unlock Panel &amp; Sync Candidates</span>";
+        btn.innerHTML = "<span>Unlock Panel &amp; Sync Sheet</span>";
       }
     }
-
-    function unlockShellUI() {
-      const overlay = document.getElementById("pinLockOverlay");
-      const shell = document.getElementById("appMainShell");
-      if (overlay) overlay.classList.add("hidden");
-      if (shell) {
-        shell.classList.remove("blur-xl", "pointer-events-none", "select-none");
-      }
-    }
-
-    function lockPanelScreen() {
-      if (recordingTargetId) stopActiveRecording();
-      try {
-        sessionStorage.removeItem(SESSION_KEY_PIN);
-      } catch (e) {}
-      document.getElementById("pinInput").value = "";
-      document.getElementById("pinErrorBox").classList.add("hidden");
-      document.getElementById("pinLockOverlay").classList.remove("hidden");
-      document.getElementById("appMainShell").classList.add("blur-xl", "pointer-events-none", "select-none");
-    }
-
+// ... existing code ... -->
     // =========================================================================
     // TWO-WAY GOOGLE SHEET SYNC (INBOUND CANDIDATES & OUTBOUND F2F RESULTS)
     // =========================================================================
     async function syncCandidatesFromSheet(manualTrigger) {
       const pin = getSessionPin();
-      const webhookUrl = getWebhookUrl();
       const badge = document.getElementById("sheetSyncStatusBadge");
 
-      if (!pin || !webhookUrl || webhookUrl.includes("REPLACE_WITH_YOUR")) {
-        if (badge) {
-          badge.textContent = "Offline / Local Mode";
-          badge.className = "px-2.5 py-1 rounded-xl bg-slate-900 border border-amber-600/50 text-[11px] font-bold text-amber-400";
-        }
-        return;
-      }
+      if (!pin) return;
 
       if (badge) {
         badge.textContent = "Syncing Sheet...";
@@ -1223,15 +912,16 @@
       }
 
       try {
-        const res = await fetch(`${webhookUrl}?pin=${encodeURIComponent(pin)}`, {
+        const res = await fetch(`${APPS_SCRIPT_URL}?pin=${encodeURIComponent(pin)}&t=${Date.now()}`, {
           method: "GET",
+          redirect: "follow",
           cache: "no-store"
         });
         const data = await res.json();
         if (data && data.result === "success" && Array.isArray(data.candidates)) {
           const count = ingestSheetCandidates(data.candidates);
           if (badge) {
-            badge.textContent = `Sheet Synced (${count})`;
+            badge.textContent = `Sheet Auto-Linked ✓ (${count})`;
             badge.className = "px-2.5 py-1 rounded-xl bg-slate-900 border border-emerald-500/50 text-[11px] font-bold text-emerald-400";
           }
           if (manualTrigger) showToast(`Synced ${count} candidates from Tab 1`, "🔄");
@@ -1245,130 +935,7 @@
         }
       }
     }
-
-    function ingestSheetCandidates(sheetRows) {
-      if (!Array.isArray(sheetRows) || sheetRows.length === 0) return state.candidates.length;
-
-      // Remove sample demo rows once real candidates arrive
-      state.candidates = state.candidates.filter(c => !c.id.startsWith("c_demo_"));
-
-      const activeP = normalizePanelKey(state.activePanel);
-      const evalPair = getFixedJudgesForPanel(activeP);
-
-      sheetRows.forEach(item => {
-        const refId = String(item.refId || "").trim();
-        const name = String(item.name || "").trim();
-        if (!name && !refId) return;
-
-        const profileRaw = String(item.profile || "").toUpperCase();
-        const isNonTech = profileRaw.includes("NON-TECH");
-        const profile = isNonTech ? "NON-TECH" : "TECH";
-        const score = Math.min(30, Math.max(0, Number(item.score) || 0));
-
-        const existing = state.candidates.find(
-          c => (refId && c.refId.toLowerCase() === refId.toLowerCase()) ||
-               (name && c.name.toLowerCase() === name.toLowerCase())
-        );
-
-        if (existing) {
-          existing.name = name || existing.name;
-          existing.degree = item.graduation || existing.degree;
-          existing.profile = profile;
-          existing.assessmentScore = score;
-        } else {
-          state.candidates.push({
-            id: "c_sheet_" + (refId || name).replace(/[^a-zA-Z0-9]/g, "") + "_" + state.candidates.length,
-            refId: refId || "SL-" + (1000 + state.candidates.length),
-            name: name,
-            degree: item.graduation || "Graduate",
-            profile: profile,
-            panelPod: activeP,
-            assessmentScore: score,
-            verdict: "Pending",
-            submitted: false,
-            snrJudge: evalPair.snr,
-            intJudge: evalPair.int,
-            snrRatings: [0, 0, 0, 0],
-            snrNotes: "",
-            intRatings: [0, 0, 0, 0],
-            intNotes: "",
-            notes: {},
-            speechSeconds: 0,
-            aiAnalysis: null
-          });
-        }
-      });
-
-      if (!state.candidates.some(c => c.id === state.activeId) && state.candidates.length > 0) {
-        state.activeId = state.candidates[0].id;
-      }
-
-      persistState();
-      renderAll();
-      return state.candidates.length;
-    }
-
-    function buildF2FSheetPayload(cand) {
-      const m = computeCandidateMetrics(cand);
-      const tel = computeSpeechTelemetry(cand);
-      const panelName = normalizePanelKey(cand.panelPod || state.activePanel);
-      const evalPair = getFixedJudgesForPanel(panelName);
-
-      const qaLines = INTERVIEW_QUESTIONS.map((q, idx) => {
-        const ans = (cand.notes && cand.notes[q.id]) ? cand.notes[q.id].trim() : "-";
-        return `Q${idx + 1}: ${ans}`;
-      }).join(" | ");
-
-      const combinedNotes = [
-        cand.snrNotes ? `[Snr Designer - ${evalPair.snr}]: ${cand.snrNotes}` : "",
-        cand.intNotes ? `[Jnr Tech - ${evalPair.int}]: ${cand.intNotes}` : "",
-        qaLines
-      ].filter(Boolean).join(" || ");
-
-      return {
-        action: "saveF2FInterview",
-        panelPin: getSessionPin(),
-        timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-        refId: cand.refId,
-        name: cand.name,
-        graduation: cand.degree,
-        profile: cand.profile,
-        pod: panelName,
-        snrJudge: evalPair.snr,
-        intJudge: evalPair.int,
-        assessmentScore: cand.assessmentScore,
-        testPct: m.testPct,
-        aiPct: m.aiPct,
-        aiContentPct: cand.aiAnalysis ? cand.aiAnalysis.contentScore : m.aiPct,
-        aiCommPct: cand.aiAnalysis ? cand.aiAnalysis.commScore : m.aiPct,
-        snrSum: m.snrSum,
-        snrPct: m.snrPct,
-        intSum: m.intSum,
-        intPct: m.intPct,
-        compositePct: m.composite,
-        verdict: cand.verdict,
-        speechMetrics: `${tel.seconds}s | ~${tel.wpm} WPM | ${tel.fillerCount} fillers`,
-        aiSummary: cand.aiAnalysis ? cand.aiAnalysis.summary : "Not run",
-        qaTranscript: combinedNotes
-      };
-    }
-
-    async function enqueueAndPushF2FResult(payload) {
-      let queue = [];
-      try {
-        queue = JSON.parse(localStorage.getItem(F2F_PENDING_SYNC_KEY) || "[]");
-      } catch (e) {
-        queue = [];
-      }
-      queue = queue.filter(item => item.refId !== payload.refId);
-      queue.push(payload);
-      try {
-        localStorage.setItem(F2F_PENDING_SYNC_KEY, JSON.stringify(queue));
-      } catch (e) {}
-      updateOfflineQueueBadge();
-      await flushOfflineQueue();
-    }
-
+// ... existing code ... -->
     async function flushOfflineQueue() {
       let queue = [];
       try {
@@ -1379,14 +946,11 @@
       updateOfflineQueueBadge();
       if (queue.length === 0) return;
 
-      const webhookUrl = getWebhookUrl();
-      if (!webhookUrl || webhookUrl.includes("REPLACE_WITH_YOUR")) return;
-
       const remaining = [];
       for (let i = 0; i < queue.length; i++) {
         const item = queue[i];
         try {
-          await fetch(webhookUrl, {
+          await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
             headers: { "Content-Type": "text/plain" },
@@ -1402,1055 +966,11 @@
       } catch (e) {}
       updateOfflineQueueBadge();
     }
-
-    function updateOfflineQueueBadge() {
-      let count = 0;
-      try {
-        count = JSON.parse(localStorage.getItem(F2F_PENDING_SYNC_KEY) || "[]").length;
-      } catch (e) {}
-      const badge = document.getElementById("offlineQueueBadge");
-      if (!badge) return;
-      badge.textContent = count === 0 ? "0 pending" : `${count} queued`;
-      badge.className = count === 0 ? "text-emerald-400 font-bold" : "text-amber-400 font-bold";
-    }
-
+// ... existing code ... -->
     // =========================================================================
-    // MULTI-PANEL SWITCHING (HARD-CODED PANEL 01–06)
-    // =========================================================================
-    function selectActivePanel(panelName) {
-      const normalizedPanel = normalizePanelKey(panelName);
-      state.activePanel = normalizedPanel;
-      const cand = getActiveCandidate();
-      const evalPair = getFixedJudgesForPanel(normalizedPanel);
-
-      if (cand) {
-        cand.panelPod = normalizedPanel;
-        cand.snrJudge = evalPair.snr;
-        cand.intJudge = evalPair.int;
-      }
-
-      persistState();
-      applyPanelTheme(normalizedPanel);
-      renderAll();
-      showToast(`Switched to ${evalPair.shortLabel}`, "🎯");
-    }
-
-    function applyPanelTheme(panelName) {
-      const normalizedPanel = normalizePanelKey(panelName);
-      const theme = PANEL_THEMES[normalizedPanel] || PANEL_THEMES["Panel 01"];
-      const evalPair = getFixedJudgesForPanel(normalizedPanel);
-
-      document.getElementById("headerPanelBadge").textContent = evalPair.shortLabel;
-      document.getElementById("headerPanelBadge").className = `px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${theme.headerBadge}`;
-      document.getElementById("brandLogoBox").className = `w-10 h-10 rounded-xl flex items-center justify-center font-black text-xl shadow-inner transition-colors ${theme.logo}`;
-      document.getElementById("panelStripContainer").className = `border-t transition-colors ${theme.strip}`;
-
-      Object.keys(PANEL_THEMES).forEach(p => {
-        const btn = document.getElementById("panelBtn_" + p);
-        if (!btn) return;
-        if (p === normalizedPanel) {
-          btn.className = `px-2.5 py-1 rounded-lg font-extrabold text-[11px] transition ${PANEL_THEMES[p].activeBtn}`;
-        } else {
-          btn.className = "px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700 transition";
-        }
-      });
-
-      document.getElementById("panelSnrLockedBadge").textContent = evalPair.snr;
-      document.getElementById("panelIntLockedBadge").textContent = evalPair.int;
-
-      document.getElementById("snrCardHeaderBadge").textContent =
-        `Dataset 3 • Interview Panel: Snr Designer — ${evalPair.snr}`;
-      document.getElementById("intCardHeaderBadge").textContent =
-        `Dataset 4 • Interview Panel: Jnr Tech — ${evalPair.int}`;
-
-      document.getElementById("activePanelPill").textContent = normalizedPanel;
-      document.getElementById("activePanelPill").className = `px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold ${theme.pill}`;
-      document.getElementById("candidateHeroCard").className = `bg-white rounded-2xl border-2 p-4 shadow-sm transition-colors ${theme.cardBorder}`;
-
-      const rosterNote = document.getElementById("rosterActivePanelNote");
-      if (rosterNote) rosterNote.textContent = evalPair.shortLabel;
-    }
-
-    // =========================================================================
-    // TAB SWITCHING
-    // =========================================================================
-    function switchMainTab(tabName) {
-      state.activeTab = tabName;
-      ["interview", "roster", "leaderboard"].forEach(t => {
-        const view = document.getElementById("view_" + t);
-        const btn = document.getElementById("tabBtn_" + t);
-        if (view) view.classList.toggle("hidden", t !== tabName);
-        if (btn) {
-          btn.className = t === tabName
-            ? "px-4 py-2 rounded-xl text-xs font-extrabold bg-blue-600 text-white shadow transition"
-            : "px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition";
-        }
-      });
-      persistState();
-      renderAll();
-    }
-
-    // =========================================================================
-    // 10-MINUTE INTERVIEW TIMER
-    // =========================================================================
-    function toggleTimer() {
-      if (isTimerRunning) {
-        clearInterval(timerInterval);
-        isTimerRunning = false;
-        document.getElementById("btnStartPauseTimer").textContent = "Resume";
-        document.getElementById("btnStartPauseTimer").className = "px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold transition";
-      } else {
-        isTimerRunning = true;
-        document.getElementById("btnStartPauseTimer").textContent = "Pause";
-        document.getElementById("btnStartPauseTimer").className = "px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold transition";
-        timerInterval = setInterval(() => {
-          if (timerSeconds > 0) {
-            timerSeconds--;
-            updateTimerDisplay();
-          } else {
-            clearInterval(timerInterval);
-            isTimerRunning = false;
-            showToast("10-Minute Interview Slot Complete!", "⏰");
-          }
-        }, 1000);
-      }
-    }
-
-    function resetTimer() {
-      clearInterval(timerInterval);
-      isTimerRunning = false;
-      timerSeconds = 600;
-      updateTimerDisplay();
-      const btn = document.getElementById("btnStartPauseTimer");
-      if (btn) {
-        btn.textContent = "Start";
-        btn.className = "px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-extrabold transition";
-      }
-    }
-
-    function updateTimerDisplay() {
-      const mins = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
-      const secs = String(timerSeconds % 60).padStart(2, "0");
-      const el = document.getElementById("timerDisplay");
-      if (!el) return;
-      el.textContent = `${mins}:${secs}`;
-      if (timerSeconds <= 120) {
-        el.className = "text-2xl font-black font-mono tracking-tight text-rose-400";
-      } else if (timerSeconds <= 300) {
-        el.className = "text-2xl font-black font-mono tracking-tight text-amber-400";
-      } else {
-        el.className = "text-2xl font-black font-mono tracking-tight text-emerald-400";
-      }
-    }
-
-    // =========================================================================
-    // LIVE AUDIO RECORDING & SPEECH-TO-TEXT TRANSCRIPTION
-    // =========================================================================
-    function toggleRecording(targetId) {
-      if (recordingTargetId === targetId) {
-        stopActiveRecording();
-        return;
-      }
-      if (recordingTargetId) {
-        stopActiveRecording();
-      }
-      startRecording(targetId);
-    }
-
-    function startRecording(targetId) {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-
-      recordingTargetId = targetId;
-      recordingStartMs = Date.now();
-      updateRecordingButtonsUI();
-
-      // 1. Start Web Speech API Live Transcription (Chrome / Edge)
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRec) {
-        try {
-          recognition = new SpeechRec();
-          recognition.lang = "en-IN";
-          recognition.continuous = true;
-          recognition.interimResults = false;
-
-          recognition.onresult = (event) => {
-            let newTranscript = "";
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-              if (event.results[i].isFinal) {
-                newTranscript += event.results[i][0].transcript + " ";
-              }
-            }
-            if (newTranscript.trim()) {
-              const qKey = targetId === "session" ? "q2" : targetId;
-              const existing = (cand.notes && cand.notes[qKey]) ? cand.notes[qKey].trim() : "";
-              cand.notes[qKey] = existing ? `${existing} ${newTranscript.trim()}` : newTranscript.trim();
-              persistState();
-              const ta = document.getElementById(`noteInput_${qKey}`);
-              if (ta) ta.value = cand.notes[qKey];
-              updateSpeechTelemetryUI();
-            }
-          };
-
-          recognition.onerror = () => {};
-          recognition.onend = () => {
-            if (recordingTargetId === targetId && recognition) {
-              try { recognition.start(); } catch (e) {}
-            }
-          };
-          recognition.start();
-        } catch (e) {}
-      }
-
-      // 2. Start Raw Audio Capture for Instant Playback
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-          .then(stream => {
-            if (recordingTargetId !== targetId) {
-              stream.getTracks().forEach(t => t.stop());
-              return;
-            }
-            audioChunks = [];
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.ondataavailable = (e) => {
-              if (e.data && e.data.size > 0) audioChunks.push(e.data);
-            };
-            mediaRecorder.onstop = () => {
-              stream.getTracks().forEach(t => t.stop());
-              if (audioChunks.length > 0) {
-                const blob = new Blob(audioChunks, { type: "audio/webm" });
-                const url = URL.createObjectURL(blob);
-                recordedAudioUrls[`${cand.id}_${targetId}`] = url;
-                renderQuestionsList();
-              }
-            };
-            mediaRecorder.start();
-          })
-          .catch(() => {
-            showToast("Mic audio blocked — type notes or allow microphone in browser", "🎙️");
-          });
-      }
-    }
-
-    function stopActiveRecording() {
-      const cand = getActiveCandidate();
-      if (cand && recordingStartMs > 0) {
-        const elapsed = Math.max(1, Math.round((Date.now() - recordingStartMs) / 1000));
-        cand.speechSeconds = (cand.speechSeconds || 0) + elapsed;
-        persistState();
-      }
-      recordingTargetId = null;
-      recordingStartMs = 0;
-
-      if (recognition) {
-        try { recognition.onend = null; recognition.stop(); } catch (e) {}
-        recognition = null;
-      }
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        try { mediaRecorder.stop(); } catch (e) {}
-      }
-      updateRecordingButtonsUI();
-      updateSpeechTelemetryUI();
-    }
-
-    function updateRecordingButtonsUI() {
-      const sessBtn = document.getElementById("btnSessionRecord");
-      const sessDot = document.getElementById("sessionRecDot");
-      const sessLbl = document.getElementById("sessionRecLabel");
-
-      if (sessBtn && sessDot && sessLbl) {
-        if (recordingTargetId === "session") {
-          sessBtn.className = "px-3 py-1.5 rounded-xl bg-rose-500 text-white text-[11px] font-extrabold flex items-center gap-1.5 shadow";
-          sessDot.className = "w-2 h-2 rounded-full bg-white rec-pulse";
-          sessLbl.textContent = "Stop Session Rec";
-        } else {
-          sessBtn.className = "px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-extrabold flex items-center gap-1.5 transition";
-          sessDot.className = "w-2 h-2 rounded-full bg-white";
-          sessLbl.textContent = "Record Session";
-        }
-      }
-
-      INTERVIEW_QUESTIONS.forEach(q => {
-        const btn = document.getElementById(`recBtn_${q.id}`);
-        if (!btn) return;
-        if (recordingTargetId === q.id) {
-          btn.className = "px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[11px] font-extrabold flex items-center gap-1.5 shadow";
-          btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-white rec-pulse"></span><span>Stop ${q.num}</span>`;
-        } else {
-          btn.className = "px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1.5 transition";
-          btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Record ${q.num}</span>`;
-        }
-      });
-    }
-
-    function computeSpeechTelemetry(cand) {
-      const allText = Object.values(cand.notes || {}).join(" ").trim();
-      const words = allText ? allText.split(/\s+/).filter(Boolean) : [];
-      const wordCount = words.length;
-      const fillers = (allText.match(/\b(um+|uh+|like|basically|actually|you know|sort of|kind of)\b/gi) || []).length;
-      const seconds = cand.speechSeconds || Math.max(0, Math.round(wordCount * 0.45));
-      const wpm = seconds > 0 ? Math.round((wordCount / seconds) * 60) : (wordCount > 0 ? 115 : 0);
-      return { wordCount, fillerCount: fillers, seconds, wpm };
-    }
-
-    function updateSpeechTelemetryUI() {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-      const tel = computeSpeechTelemetry(cand);
-      const lbl = document.getElementById("speechTelemetryLabel");
-      if (lbl) {
-        lbl.textContent = `${tel.seconds}s • ~${tel.wpm} WPM • ${tel.fillerCount} fillers`;
-      }
-    }
-
-    // =========================================================================
-    // QUESTIONS RENDERING & CHEAT SHEET TOGGLE
-    // =========================================================================
-    function toggleCheatSheet() {
-      state.showCheatSheet = !state.showCheatSheet;
-      const btn = document.getElementById("btnToggleCheatSheet");
-      if (btn) {
-        btn.textContent = state.showCheatSheet
-          ? "Senior Designer Cheat Sheet: ON"
-          : "Senior Designer Cheat Sheet: OFF";
-      }
-      persistState();
-      renderQuestionsList();
-    }
-
-    function renderQuestionsList() {
-      const container = document.getElementById("questionsContainer");
-      const cand = getActiveCandidate();
-      if (!container || !cand) return;
-
-      container.innerHTML = INTERVIEW_QUESTIONS.map(q => {
-        const noteVal = (cand.notes && cand.notes[q.id]) ? cand.notes[q.id] : "";
-        const audioUrl = recordedAudioUrls[`${cand.id}_${q.id}`];
-        const isNonTech = cand.profile === "NON-TECH";
-
-        return `
-          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-2.5">
-            <div class="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="px-2 py-0.5 rounded-md bg-slate-900 text-white text-[11px] font-extrabold">${q.num}</span>
-                  <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold">${q.tag}</span>
-                  ${isNonTech && (q.id === "q6" || q.id === "q7")
-                    ? `<span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10px] font-extrabold">Non-Tech: Verbal / AI Prompt Check</span>`
-                    : ""}
-                </div>
-                <h3 class="text-sm font-extrabold text-slate-900 mt-1">${escapeHtml(q.title)}</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(q.promptHint)}</p>
-              </div>
-
-              <button
-                type="button"
-                id="recBtn_${q.id}"
-                onclick="toggleRecording('${q.id}')"
-                class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1.5 shrink-0 transition"
-              >
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span>Record ${q.num}</span>
-              </button>
-            </div>
-
-            ${state.showCheatSheet ? `
-              <div class="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-[11px] text-amber-950 leading-relaxed">
-                <strong class="font-extrabold text-amber-900">Snr Designer Guide:</strong> ${escapeHtml(q.cheatSheet)}
-              </div>
-            ` : ""}
-
-            ${audioUrl ? `
-              <div class="pt-0.5">
-                <audio controls src="${audioUrl}" class="w-full h-8"></audio>
-              </div>
-            ` : ""}
-
-            <div>
-              <textarea
-                id="noteInput_${q.id}"
-                rows="2"
-                oninput="updateQuestionNote('${q.id}', this.value)"
-                placeholder="Live voice transcript or interviewer notes for ${q.num}..."
-                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
-              >${escapeHtml(noteVal)}</textarea>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-1.5">
-              ${QUICK_TAGS.map(tag => `
-                <button
-                  type="button"
-                  onclick="appendQuickTag('${q.id}', '${tag}')"
-                  class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-blue-100 hover:text-blue-800 text-slate-600 text-[10px] font-bold transition"
-                >
-                  + ${tag}
-                </button>
-              `).join("")}
-            </div>
-          </div>
-        `;
-      }).join("");
-
-      updateRecordingButtonsUI();
-    }
-
-    function updateQuestionNote(qId, val) {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-      if (!cand.notes) cand.notes = {};
-      cand.notes[qId] = val;
-      persistState();
-      updateSpeechTelemetryUI();
-    }
-
-    function appendQuickTag(qId, tag) {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-      if (!cand.notes) cand.notes = {};
-      const curr = (cand.notes[qId] || "").trim();
-      if (curr.includes(`[${tag}]`)) return;
-      cand.notes[qId] = curr ? `${curr} [${tag}]` : `[${tag}]`;
-      persistState();
-      const ta = document.getElementById(`noteInput_${qId}`);
-      if (ta) ta.value = cand.notes[qId];
-    }
-
-    // =========================================================================
-    // DATASET 2: AI EVALUATION (GEMINI API + BUILT-IN SMART RUBRIC FALLBACK)
-    // =========================================================================
-    async function runAiEvaluation() {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-
-      const btn = document.getElementById("btnRunAiAnalysis");
-      btn.disabled = true;
-      btn.innerHTML = "<span>Analyzing Audio &amp; Q&amp;A Responses...</span>";
-
-      const tel = computeSpeechTelemetry(cand);
-      const geminiKey = getGeminiKey();
-
-      const qaBlock = INTERVIEW_QUESTIONS.map(q => {
-        const ans = (cand.notes && cand.notes[q.id]) ? cand.notes[q.id].trim() : "(No notes recorded)";
-        return `${q.num} (${q.title}): ${ans}`;
-      }).join("\n");
-
-      let resultObj = null;
-
-      // Try Live Gemini API if user configured a key
-      if (geminiKey) {
-        try {
-          const prompt = `You are a technical & instructional design hiring evaluator at Simplilearn.
-Evaluate this candidate (${cand.name}, Degree: ${cand.degree}, Track: ${cand.profile}, Online Assessment: ${cand.assessmentScore}/30).
-Speech Telemetry: ${tel.wordCount} words transcribed, ~${tel.wpm} WPM, ${tel.fillerCount} filler words.
-Interview Q&A Notes:
-${qaBlock}
-
-Return strictly valid JSON with no markdown fences:
-{"contentScore": <0-100 integer>, "commScore": <0-100 integer>, "summary": "<concise 2-sentence hiring assessment covering technical/scenario depth and communication fluency>"}`;
-
-          const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiKey)}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.2 }
-              })
-            }
-          );
-
-          const json = await response.json();
-          const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          const cleaned = rawText.replace(/```json|```/gi, "").trim();
-          const parsed = JSON.parse(cleaned);
-          if (typeof parsed.contentScore === "number" && typeof parsed.commScore === "number") {
-            resultObj = {
-              contentScore: Math.min(100, Math.max(0, Math.round(parsed.contentScore))),
-              commScore: Math.min(100, Math.max(0, Math.round(parsed.commScore))),
-              summary: String(parsed.summary || "AI evaluation completed.")
-            };
-          }
-        } catch (err) {
-          resultObj = null;
-        }
-      }
-
-      // Deterministic Smart Rubric Fallback (works 100% offline or without API key)
-      if (!resultObj) {
-        resultObj = computeLocalRubricAiScore(cand, tel);
-      }
-
-      resultObj.combined = Math.round((resultObj.contentScore + resultObj.commScore) / 2);
-      cand.aiAnalysis = resultObj;
-      persistState();
-      renderAll();
-
-      btn.disabled = false;
-      btn.innerHTML = "<span>Re-Run AI Audio &amp; Q&amp;A Analysis</span>";
-      showToast(`AI Analysis Complete: ${resultObj.combined}%`, "✨");
-    }
-
-    function computeLocalRubricAiScore(cand, tel) {
-      let answeredCount = 0;
-      let keywordHits = 0;
-      let positiveTags = 0;
-      let negativeTags = 0;
-
-      INTERVIEW_QUESTIONS.forEach(q => {
-        const text = ((cand.notes && cand.notes[q.id]) || "").toLowerCase();
-        if (text.trim().length >= 4) answeredCount++;
-        q.keywords.forEach(kw => {
-          if (text.includes(kw)) keywordHits++;
-        });
-        if (text.includes("clear & structured") || text.includes("strong tech depth") || text.includes("great learner empathy")) {
-          positiveTags++;
-        }
-        if (text.includes("weak / unclear") || text.includes("needs prompting")) {
-          negativeTags++;
-        }
-      });
-
-      const baseTestPct = Math.round((cand.assessmentScore / 30) * 100);
-      let contentScore = Math.round(baseTestPct * 0.45 + Math.min(35, answeredCount * 4.5) + Math.min(20, keywordHits * 2.2) + positiveTags * 4 - negativeTags * 5);
-      contentScore = Math.min(96, Math.max(25, contentScore));
-
-      let commScore = 55 + Math.min(25, Math.round(tel.wordCount / 6)) + positiveTags * 5 - tel.fillerCount * 3 - negativeTags * 5;
-      if (answeredCount === 0) commScore = Math.max(40, Math.round(baseTestPct * 0.7));
-      commScore = Math.min(96, Math.max(30, commScore));
-
-      const trackLabel = cand.profile === "NON-TECH" ? "Non-Tech / Scenario" : "Technical";
-      const summary = `${trackLabel} evaluation across ${answeredCount}/8 logged questions (${keywordHits} rubric concepts matched). Speech fluency rated at ${commScore}% (~${tel.wpm} WPM, ${tel.fillerCount} fillers).`;
-
-      return { contentScore, commScore, summary };
-    }
-
-    // =========================================================================
-    // DATASET 3 & 4: SNR DESIGNER & JNR TECH ZERO-DEFAULT SLIDERS
-    // =========================================================================
-    function renderRatingSliders() {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-
-      const snrBox = document.getElementById("snrSlidersContainer");
-      if (snrBox) {
-        snrBox.innerHTML = SNR_CRITERIA.map((item, idx) => {
-          const val = Number(cand.snrRatings[idx]) || 0;
-          return `
-            <div class="p-2.5 rounded-xl bg-amber-50/50 border border-amber-200/80">
-              <div class="flex items-center justify-between text-xs mb-1">
-                <div>
-                  <div class="font-extrabold text-slate-800">${item.label}</div>
-                  <div class="text-[10px] text-slate-500">${item.desc}</div>
-                </div>
-                <span class="px-2 py-0.5 rounded-md font-extrabold text-xs ${val === 0 ? "bg-slate-200 text-slate-700" : "bg-amber-600 text-white"}">
-                  ${val} / 5
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="5"
-                step="1"
-                value="${val}"
-                oninput="updatePanelSlider('snr', ${idx}, this.value)"
-                class="w-full cursor-pointer"
-              />
-            </div>
-          `;
-        }).join("");
-      }
-
-      const intBox = document.getElementById("intSlidersContainer");
-      if (intBox) {
-        intBox.innerHTML = INT_CRITERIA.map((item, idx) => {
-          const val = Number(cand.intRatings[idx]) || 0;
-          return `
-            <div class="p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-200/80">
-              <div class="flex items-center justify-between text-xs mb-1">
-                <div>
-                  <div class="font-extrabold text-slate-800">${item.label}</div>
-                  <div class="text-[10px] text-slate-500">${item.desc}</div>
-                </div>
-                <span class="px-2 py-0.5 rounded-md font-extrabold text-xs ${val === 0 ? "bg-slate-200 text-slate-700" : "bg-emerald-600 text-white"}">
-                  ${val} / 5
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="5"
-                step="1"
-                value="${val}"
-                oninput="updatePanelSlider('int', ${idx}, this.value)"
-                class="w-full cursor-pointer"
-              />
-            </div>
-          `;
-        }).join("");
-      }
-
-      document.getElementById("snrNotesInput").value = cand.snrNotes || "";
-      document.getElementById("intNotesInput").value = cand.intNotes || "";
-    }
-
-    function updatePanelSlider(role, idx, rawVal) {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-      const val = Math.min(5, Math.max(0, Number(rawVal) || 0));
-      if (role === "snr") {
-        cand.snrRatings[idx] = val;
-      } else {
-        cand.intRatings[idx] = val;
-      }
-      persistState();
-      renderRatingSliders();
-      updateScoreBadges();
-    }
-
-    function updatePanelNotes(role, text) {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-      if (role === "snr") cand.snrNotes = text;
-      else cand.intNotes = text;
-      persistState();
-    }
-
-    function updateActiveVerdict(verdict) {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-      cand.verdict = verdict;
-      persistState();
-    }
-
-    // =========================================================================
-    // 4-DATASET COMPOSITE METRICS ENGINE
-    // =========================================================================
-    function computeCandidateMetrics(cand) {
-      const testPct = Math.round(((Number(cand.assessmentScore) || 0) / 30) * 100);
-      const hasAi = Boolean(cand.aiAnalysis && typeof cand.aiAnalysis.combined === "number");
-      const aiPct = hasAi ? cand.aiAnalysis.combined : 0;
-
-      const snrSum = (cand.snrRatings || [0, 0, 0, 0]).reduce((a, b) => a + (Number(b) || 0), 0);
-      const snrPct = Math.round((snrSum / 20) * 100);
-
-      const intSum = (cand.intRatings || [0, 0, 0, 0]).reduce((a, b) => a + (Number(b) || 0), 0);
-      const intPct = Math.round((intSum / 20) * 100);
-
-      // Equal 25% weighting across all 4 datasets (redistributed cleanly if AI not run yet)
-      let composite = 0;
-      if (hasAi) {
-        composite = Math.round(testPct * 0.25 + aiPct * 0.25 + snrPct * 0.25 + intPct * 0.25);
-      } else {
-        composite = Math.round(testPct * 0.34 + snrPct * 0.33 + intPct * 0.33);
-      }
-
-      return { testPct, hasAi, aiPct, snrSum, snrPct, intSum, intPct, composite };
-    }
-
-    function updateScoreBadges() {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-      const m = computeCandidateMetrics(cand);
-
-      document.getElementById("heroTestScore").textContent = `${cand.assessmentScore} / 30 (${m.testPct}%)`;
-      document.getElementById("heroAiScore").textContent = m.hasAi ? `${m.aiPct}%` : "Pending";
-      document.getElementById("heroSnrScore").textContent = `${m.snrSum} / 20 (${m.snrPct}%)`;
-      document.getElementById("heroIntScore").textContent = `${m.intSum} / 20 (${m.intPct}%)`;
-
-      document.getElementById("snrTotalBadge").textContent = `${m.snrSum} / 20 (${m.snrPct}%)`;
-      document.getElementById("intTotalBadge").textContent = `${m.intSum} / 20 (${m.intPct}%)`;
-
-      document.getElementById("snrZeroWarnBadge").classList.toggle("hidden", m.snrSum > 0);
-      document.getElementById("intZeroWarnBadge").classList.toggle("hidden", m.intSum > 0);
-
-      document.getElementById("compositeScoreDisplay").textContent = `${m.composite}%`;
-
-      const aiBadge = document.getElementById("aiCombinedBadge");
-      const aiPanel = document.getElementById("aiResultPanel");
-      if (m.hasAi) {
-        aiBadge.textContent = `${m.aiPct}% Combined`;
-        aiPanel.classList.remove("hidden");
-        document.getElementById("aiContentScoreVal").textContent = `${cand.aiAnalysis.contentScore}%`;
-        document.getElementById("aiCommScoreVal").textContent = `${cand.aiAnalysis.commScore}%`;
-        document.getElementById("aiSummaryText").textContent = cand.aiAnalysis.summary;
-      } else {
-        aiBadge.textContent = "Not Run";
-        aiPanel.classList.add("hidden");
-      }
-    }
-
-    // =========================================================================
-    // MANDATORY CONFIRMATION POP-UP MODAL & SUBMISSION
-    // =========================================================================
-    function openSubmitConfirmationModal() {
-      if (recordingTargetId) stopActiveRecording();
-      const cand = getActiveCandidate();
-      if (!cand) return;
-
-      const m = computeCandidateMetrics(cand);
-      const panelName = normalizePanelKey(state.activePanel || cand.panelPod);
-      const evalPair = getFixedJudgesForPanel(panelName);
-      cand.panelPod = panelName;
-      cand.snrJudge = evalPair.snr;
-      cand.intJudge = evalPair.int;
-
-      document.getElementById("modalPanelBadge").textContent = evalPair.shortLabel;
-      document.getElementById("modalPanelBadge").className =
-        `px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${(PANEL_THEMES[panelName] || PANEL_THEMES["Panel 01"]).pill}`;
-      document.getElementById("modalSubmitCandInfo").textContent =
-        `${cand.name} (${cand.refId}) • ${cand.degree} • ${cand.profile}`;
-
-      document.getElementById("modalSnrLabel").textContent = `3. Interview Panel: Snr Designer — ${evalPair.snr}`;
-      document.getElementById("modalIntLabel").textContent = `4. Interview Panel: Jnr Tech — ${evalPair.int}`;
-
-      document.getElementById("modalSumTest").textContent = `${cand.assessmentScore} / 30 (${m.testPct}%)`;
-      document.getElementById("modalSumAi").textContent = m.hasAi
-        ? `${m.aiPct}% (C:${cand.aiAnalysis.contentScore}% | V:${cand.aiAnalysis.commScore}%)`
-        : "Not Run Yet";
-      document.getElementById("modalSumSnr").textContent = `${m.snrSum} / 20 (${m.snrPct}%)`;
-      document.getElementById("modalSumInt").textContent = `${m.intSum} / 20 (${m.intPct}%)`;
-      document.getElementById("modalSumComposite").textContent = `${m.composite}%`;
-
-      const verdictSel = document.getElementById("modalVerdictSelect");
-      verdictSel.value = cand.verdict && cand.verdict !== "Pending" ? cand.verdict : "Shortlist";
-
-      const warnings = [];
-      if (m.snrSum === 0 && evalPair.snr !== "None / Solo") {
-        warnings.push(`• Interview Panel: Snr Designer (${evalPair.snr}) rating is still at Default 0 / 20.`);
-      }
-      if (m.intSum === 0) {
-        warnings.push(`• Interview Panel: Jnr Tech (${evalPair.int}) rating is still at Default 0 / 20.`);
-      }
-      if (!m.hasAi) {
-        warnings.push("• AI Audio & Q&A Analysis has not been run yet.");
-      }
-
-      const warnBox = document.getElementById("modalWarningsBox");
-      if (warnings.length > 0) {
-        warnBox.innerHTML = warnings.map(w => `<div>${escapeHtml(w)}</div>`).join("");
-        warnBox.classList.remove("hidden");
-      } else {
-        warnBox.classList.add("hidden");
-      }
-
-      document.getElementById("submitConfirmModal").classList.remove("hidden");
-    }
-
-    function closeSubmitModal() {
-      document.getElementById("submitConfirmModal").classList.add("hidden");
-    }
-
-    function confirmAndFinalizeSubmission() {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-
-      const panelName = normalizePanelKey(state.activePanel || cand.panelPod);
-      const evalPair = getFixedJudgesForPanel(panelName);
-      cand.verdict = document.getElementById("modalVerdictSelect").value;
-      cand.submitted = true;
-      cand.panelPod = panelName;
-      cand.snrJudge = evalPair.snr;
-      cand.intJudge = evalPair.int;
-
-      const f2fPayload = buildF2FSheetPayload(cand);
-      enqueueAndPushF2FResult(f2fPayload);
-
-      closeSubmitModal();
-      persistState();
-      showToast(`Submitted ${cand.name} (${cand.verdict}) to Face to Face - Interview tab!`, "✅");
-
-      // Advance cleanly to the next unsubmitted candidate
-      const nextPending = state.candidates.find(c => !c.submitted && c.id !== cand.id);
-      if (nextPending) {
-        state.activeId = nextPending.id;
-        nextPending.panelPod = panelName;
-        nextPending.snrJudge = evalPair.snr;
-        nextPending.intJudge = evalPair.int;
-        resetTimer();
-      }
-      persistState();
-      renderAll();
-    }
-
-    // =========================================================================
-    // ACTIVE WORKSPACE, ROSTER & LEADERBOARD RENDERERS
-    // =========================================================================
-    function quickSwitchCandidate(candId) {
-      if (recordingTargetId) stopActiveRecording();
-      state.activeId = candId;
-      const cand = getActiveCandidate();
-      if (cand) {
-        const activeP = normalizePanelKey(state.activePanel);
-        const pair = getFixedJudgesForPanel(activeP);
-        cand.panelPod = activeP;
-        cand.snrJudge = pair.snr;
-        cand.intJudge = pair.int;
-      }
-      persistState();
-      resetTimer();
-      renderAll();
-    }
-
-    function renderActiveWorkspace() {
-      const cand = getActiveCandidate();
-      if (!cand) return;
-
-      const activeP = normalizePanelKey(state.activePanel || cand.panelPod);
-      const evalPair = getFixedJudgesForPanel(activeP);
-
-      const qSelect = document.getElementById("quickSwitchCandidateSelect");
-      qSelect.innerHTML = state.candidates.map(c =>
-        `<option value="${c.id}" ${c.id === cand.id ? "selected" : ""}>${escapeHtml(c.name)} (${escapeHtml(c.refId)}) ${c.submitted ? "✓" : ""}</option>`
-      ).join("");
-
-      document.getElementById("activeRefBadge").textContent = cand.refId;
-      const tag = document.getElementById("activeProfileTag");
-      tag.textContent = cand.profile === "NON-TECH" ? "NON-TECH" : "TECHNICAL";
-      tag.className = cand.profile === "NON-TECH"
-        ? "px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-rose-100 text-rose-800"
-        : "px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-100 text-blue-800";
-
-      document.getElementById("activeSubmittedPill").classList.toggle("hidden", !cand.submitted);
-      document.getElementById("activeCandMeta").textContent =
-        `Degree: ${cand.degree} • Locked Judges: ${evalPair.snr} (Snr Designer) & ${evalPair.int} (Jnr Tech)`;
-      document.getElementById("activeVerdictSelect").value = cand.verdict || "Pending";
-
-      renderQuestionsList();
-      renderRatingSliders();
-      updateScoreBadges();
-      updateSpeechTelemetryUI();
-    }
-
-    function toggleManualAddForm() {
-      document.getElementById("manualAddDrawer").classList.toggle("hidden");
-    }
-
-    function addManualCandidate() {
-      const refId = (document.getElementById("newCandRef").value || "").trim() || ("SL-" + Math.floor(7100 + Math.random() * 899));
-      const name = (document.getElementById("newCandName").value || "").trim();
-      const degree = (document.getElementById("newCandDegree").value || "").trim() || "Graduate";
-      const profile = document.getElementById("newCandProfile").value;
-      const score = Math.min(30, Math.max(0, Number(document.getElementById("newCandScore").value) || 0));
-
-      if (!name) {
-        showToast("Please enter candidate full name", "⚠️");
-        return;
-      }
-
-      const activeP = normalizePanelKey(state.activePanel);
-      const evalPair = getFixedJudgesForPanel(activeP);
-      const newId = "c_manual_" + Date.now();
-
-      state.candidates.unshift({
-        id: newId,
-        refId,
-        name,
-        degree,
-        profile,
-        panelPod: activeP,
-        assessmentScore: score,
-        verdict: "Pending",
-        submitted: false,
-        snrJudge: evalPair.snr,
-        intJudge: evalPair.int,
-        snrRatings: [0, 0, 0, 0],
-        snrNotes: "",
-        intRatings: [0, 0, 0, 0],
-        intNotes: "",
-        notes: {},
-        speechSeconds: 0,
-        aiAnalysis: null
-      });
-
-      document.getElementById("newCandRef").value = "";
-      document.getElementById("newCandName").value = "";
-      document.getElementById("newCandDegree").value = "";
-      document.getElementById("newCandScore").value = "";
-      document.getElementById("manualAddDrawer").classList.add("hidden");
-
-      persistState();
-      renderAll();
-      showToast(`Added ${name} to roster`, "✅");
-    }
-
-    function renderRosterTable() {
-      const tbody = document.getElementById("rosterTableBody");
-      if (!tbody) return;
-
-      const query = (document.getElementById("rosterSearchInput")?.value || "").trim().toLowerCase();
-      const profFilter = document.getElementById("rosterProfileFilter")?.value || "ALL";
-
-      const filtered = state.candidates.filter(c => {
-        if (profFilter === "TECH" && c.profile !== "TECH") return false;
-        if (profFilter === "NON-TECH" && c.profile !== "NON-TECH") return false;
-        if (profFilter === "PENDING" && c.submitted) return false;
-        if (profFilter === "EVALUATED" && !c.submitted) return false;
-        if (!query) return true;
-        return (
-          c.name.toLowerCase().includes(query) ||
-          c.refId.toLowerCase().includes(query) ||
-          c.degree.toLowerCase().includes(query)
-        );
-      });
-
-      tbody.innerHTML = filtered.map(cand => {
-        const isNonTech = cand.profile === "NON-TECH";
-        const pName = normalizePanelKey(cand.panelPod);
-        const pPair = getFixedJudgesForPanel(pName);
-        const pPill = (PANEL_THEMES[pName] || PANEL_THEMES["Panel 01"]).pill;
-
-        return `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="py-3 px-3 font-mono font-bold text-slate-700">${escapeHtml(cand.refId)}</td>
-            <td class="py-3 px-3">
-              <div class="font-extrabold text-slate-900">${escapeHtml(cand.name)}</div>
-              <div class="text-[11px] text-slate-500">${escapeHtml(cand.degree)}</div>
-            </td>
-            <td class="py-3 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                isNonTech ? "bg-rose-100 text-rose-800" : "bg-blue-100 text-blue-800"
-              }">${cand.profile}</span>
-            </td>
-            <td class="py-3 px-3 font-extrabold text-slate-800">${cand.assessmentScore} / 30</td>
-            <td class="py-3 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${pPill}">${escapeHtml(pName)}</span>
-              <div class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(pPair.snr)} &amp; ${escapeHtml(pPair.int)}</div>
-            </td>
-            <td class="py-3 px-3">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                cand.submitted ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-              }">${cand.submitted ? `Evaluated (${cand.verdict})` : "Pending"}</span>
-            </td>
-            <td class="py-3 px-3 text-right">
-              <button
-                type="button"
-                onclick="launchCandidateInterview('${cand.id}')"
-                class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition"
-              >
-                Evaluate &rarr;
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function launchCandidateInterview(candId) {
-      if (recordingTargetId) stopActiveRecording();
-      state.activeId = candId;
-      const cand = getActiveCandidate();
-      if (cand) {
-        const activeP = normalizePanelKey(state.activePanel);
-        const pair = getFixedJudgesForPanel(activeP);
-        cand.panelPod = activeP;
-        cand.snrJudge = pair.snr;
-        cand.intJudge = pair.int;
-      }
-      persistState();
-      resetTimer();
-      switchMainTab("interview");
-    }
-
-    function setLeaderboardPanelFilter(panelFilter) {
-      state.leaderboardPanelFilter = panelFilter;
-      ["ALL", "Panel 01", "Panel 02", "Panel 03", "Panel 04", "Panel 05", "Panel 06"].forEach(key => {
-        const btn = document.getElementById("lbFilter_" + key);
-        if (!btn) return;
-        btn.className = key === panelFilter
-          ? "px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white"
-          : "px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600 hover:bg-slate-200";
-      });
-      renderLeaderboardTable();
-    }
-
-    function renderLeaderboardTable() {
-      const tbody = document.getElementById("leaderboardTableBody");
-      if (!tbody) return;
-
-      const verdictColors = {
-        "Strong Hire": "bg-emerald-100 text-emerald-800 border-emerald-300",
-        "Shortlist": "bg-blue-100 text-blue-800 border-blue-300",
-        "Hold": "bg-amber-100 text-amber-800 border-amber-300",
-        "Reject": "bg-rose-100 text-rose-800 border-rose-300",
-        "Pending": "bg-slate-100 text-slate-700 border-slate-300"
-      };
-
-      const ranked = state.candidates
-        .filter(c => state.leaderboardPanelFilter === "ALL" || normalizePanelKey(c.panelPod) === state.leaderboardPanelFilter)
-        .map(cand => ({ cand, m: computeCandidateMetrics(cand) }))
-        .sort((a, b) => b.m.composite - a.m.composite);
-
-      tbody.innerHTML = ranked.map(({ cand, m }, idx) => {
-        const pName = normalizePanelKey(cand.panelPod);
-        const pPair = getFixedJudgesForPanel(pName);
-        const pPill = (PANEL_THEMES[pName] || PANEL_THEMES["Panel 01"]).pill;
-
-        return `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="py-3 px-3 font-extrabold text-slate-500">#${idx + 1}</td>
-            <td class="py-3 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${pPill}">${escapeHtml(pName)}</span>
-              <div class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(pPair.snr)} &amp; ${escapeHtml(pPair.int)}</div>
-            </td>
-            <td class="py-3 px-3">
-              <div class="font-extrabold text-slate-900">${escapeHtml(cand.name)} <span class="font-mono text-[10px] font-normal text-slate-500">(${escapeHtml(cand.refId)})</span></div>
-              <div class="text-[11px] text-slate-500">${escapeHtml(cand.degree)} • <strong class="${cand.profile === "NON-TECH" ? "text-rose-700" : "text-blue-700"}">${cand.profile}</strong></div>
-            </td>
-            <td class="py-3 px-3 font-bold">${cand.assessmentScore}/30 (${m.testPct}%)</td>
-            <td class="py-3 px-3 font-bold text-blue-800">${m.hasAi ? `${m.aiPct}%` : "—"}</td>
-            <td class="py-3 px-3 font-bold text-amber-700">${m.snrSum}/20 (${m.snrPct}%)</td>
-            <td class="py-3 px-3 font-bold text-emerald-700">${m.intSum}/20 (${m.intPct}%)</td>
-            <td class="py-3 px-3 text-sm font-extrabold text-slate-900">${m.composite}%</td>
-            <td class="py-3 px-3">
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${verdictColors[cand.verdict] || verdictColors["Pending"]}">${escapeHtml(cand.verdict)}</span>
-            </td>
-            <td class="py-3 px-3 text-right">
-              <button type="button" onclick="launchCandidateInterview('${cand.id}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold">
-                Review
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function exportToCSV() {
-      const headers = [
-        "Rank", "Panel", "Ref ID", "Full Name", "Degree", "Profile",
-        "Test (/30)", "Test (%)", "AI Score (%)", "Snr Designer", "Snr (/20)",
-        "Jnr Tech", "Jnr (/20)", "Weighted Final (%)", "Verdict"
-      ];
-
-      const ranked = state.candidates
-        .map(cand => ({ cand, m: computeCandidateMetrics(cand) }))
-        .sort((a, b) => b.m.composite - a.m.composite);
-
-      const rows = ranked.map(({ cand, m }, i) => {
-        const pName = normalizePanelKey(cand.panelPod);
-        const pPair = getFixedJudgesForPanel(pName);
-        return [
-          i + 1, pName, cand.refId, cand.name, cand.degree, cand.profile,
-          cand.assessmentScore, m.testPct + "%", m.hasAi ? m.aiPct + "%" : "",
-          pPair.snr, m.snrSum, pPair.int, m.intSum, m.composite + "%", cand.verdict
-        ].map(v => `"${String(v || "").replace(/"/g, '""')}"`).join(",");
-      });
-
-      const csv = [headers.join(","), ...rows].join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Simplilearn_F2F_4Dataset_Results_${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // =========================================================================
-    // SETTINGS MODAL
+    // SETTINGS MODAL (OPTIONAL GEMINI API KEY)
     // =========================================================================
     function openSettingsModal() {
-      document.getElementById("settingsWebhookInput").value = getWebhookUrl();
       document.getElementById("settingsGeminiKeyInput").value = getGeminiKey();
       document.getElementById("settingsModal").classList.remove("hidden");
     }
@@ -2460,17 +980,12 @@ Return strictly valid JSON with no markdown fences:
     }
 
     function saveSettingsModal() {
-      const hookVal = (document.getElementById("settingsWebhookInput").value || "").trim();
       const gemVal = (document.getElementById("settingsGeminiKeyInput").value || "").trim();
-      if (hookVal && hookVal.startsWith("http")) {
-        setWebhookUrl(hookVal);
-      }
       try {
         localStorage.setItem(STORAGE_KEY_GEMINI, gemVal);
       } catch (e) {}
       closeSettingsModal();
-      syncCandidatesFromSheet(true);
-      showToast("Integration settings saved", "✅");
+      showToast("Gemini API key saved", "✅");
     }
 
     // =========================================================================
@@ -2487,12 +1002,6 @@ Return strictly valid JSON with no markdown fences:
 
     window.addEventListener("DOMContentLoaded", () => {
       loadPersistedState();
-
-      const savedHook = getWebhookUrl();
-      const lockHookEl = document.getElementById("lockWebhookInput");
-      if (lockHookEl && !savedHook.includes("REPLACE_WITH_YOUR")) {
-        lockHookEl.value = savedHook;
-      }
 
       state.activePanel = normalizePanelKey(state.activePanel);
       applyPanelTheme(state.activePanel);
