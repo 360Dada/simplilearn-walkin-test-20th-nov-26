@@ -1,0 +1,2432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simplilearn | 10-Min F2F Interview & Multi-Panel 4-Dataset Evaluator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #2563eb;
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
+      transition: transform 0.1s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+    }
+    input[type="range"].amber-slider::-webkit-slider-thumb {
+      background: #d97706;
+    }
+    input[type="range"].emerald-slider::-webkit-slider-thumb {
+      background: #059669;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.9; }
+      70% { transform: scale(1.25); opacity: 0; }
+      100% { transform: scale(1.25); opacity: 0; }
+    }
+    .recording-pulse::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 9999px;
+      background: #ef4444;
+      animation: pulse-ring 1.4s infinite;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- ===================================================================== -->
+  <!-- TOP STICKY HEADER & MULTI-PANEL SELECTOR BAR                          -->
+  <!-- ===================================================================== -->
+  <header class="bg-[#0f172a] text-white sticky top-0 z-40 shadow-lg border-b border-slate-800">
+    <!-- Top Row: Brand, 10-Min Countdown Timer & Sheet Sync -->
+    <div class="max-w-[1440px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand + Active Panel Badge -->
+      <div class="flex items-center gap-3">
+        <div id="brandLogoBox" class="w-10 h-10 rounded-xl bg-[#2563eb] flex items-center justify-center font-extrabold text-xl shadow-inner transition-colors">
+          S
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight">Simplilearn F2F Panel</h1>
+            <span id="headerPanelBadge" class="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/40">
+              Panel 1
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">10-Min Structured Interview • 4-Dataset Composite Evaluator</p>
+        </div>
+      </div>
+
+      <!-- Live 10-Minute Pacing Timer -->
+      <div class="flex items-center gap-2 sm:gap-3 bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-2xl">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span id="timerPhaseBadge" class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Phase 1: Intro &amp; Company (0–3m)
+            </span>
+            <span id="timerDisplay" class="font-mono text-xl sm:text-2xl font-extrabold text-amber-400 tracking-wider">
+              10:00
+            </span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
+            <div id="timerProgressBar" class="h-full bg-emerald-400 transition-all duration-500" style="width: 100%;"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+          <button id="btnTimerToggle" onclick="toggleTimer()" class="px-3 py-1.5 rounded-xl bg-[#2563eb] hover:bg-blue-500 text-xs font-bold transition shadow">
+            Start 10m
+          </button>
+          <button onclick="resetTimer()" title="Reset 10:00 Timer" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+            ↺
+          </button>
+        </div>
+      </div>
+
+      <!-- Sync & Export Controls -->
+      <div class="flex items-center gap-2">
+        <button id="btnHeaderSyncSheet" onclick="fetchCandidatesFromGoogleSheet(false)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-emerald-300 transition flex items-center gap-1.5">
+          <span>🔄 Sync Sheet</span>
+        </button>
+        <button onclick="openQuickWalkInModal()" class="px-3 py-2 rounded-xl bg-[#2563eb] hover:bg-blue-500 text-xs font-bold text-white transition shadow">
+          + Walk-In Entry
+        </button>
+        <button onclick="openWeightModal()" class="hidden sm:inline-flex px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition">
+          ⚖️ Weights
+        </button>
+      </div>
+    </div>
+
+    <!-- MULTI-PANEL DIFFERENTIATOR STRIP (PANEL 1 TO PANEL 6 + CUSTOM EVALUATORS) -->
+    <div id="panelStripContainer" class="bg-blue-950/90 border-t border-blue-800/60 transition-colors">
+      <div class="max-w-[1440px] mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300 mr-1">Active Interview Panel:</span>
+          <button onclick="selectActivePanel('Panel 1')" id="panelBtn_Panel 1" class="px-2.5 py-1 rounded-lg font-extrabold text-[11px] bg-blue-600 text-white shadow">Panel 1</button>
+          <button onclick="selectActivePanel('Panel 2')" id="panelBtn_Panel 2" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 2</button>
+          <button onclick="selectActivePanel('Panel 3')" id="panelBtn_Panel 3" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 3</button>
+          <button onclick="selectActivePanel('Panel 4')" id="panelBtn_Panel 4" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 4</button>
+          <button onclick="selectActivePanel('Panel 5')" id="panelBtn_Panel 5" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 5</button>
+          <button onclick="selectActivePanel('Panel 6')" id="panelBtn_Panel 6" class="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700">Panel 6</button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-700 rounded-lg px-2 py-1">
+            <span class="text-[10px] font-bold text-amber-300">Snr Designer:</span>
+            <input type="text" id="panelSnrNameInput" onchange="savePanelEvaluators()" placeholder="Snr Name" class="bg-transparent text-white font-semibold text-[11px] w-24 outline-none" />
+          </div>
+          <div class="flex items-center gap-1 bg-slate-900/80 border border-slate-700 rounded-lg px-2 py-1">
+            <span class="text-[10px] font-bold text-emerald-300">Jnr Tech:</span>
+            <input type="text" id="panelIntNameInput" onchange="savePanelEvaluators()" placeholder="Tech Name" class="bg-transparent text-white font-semibold text-[11px] w-24 outline-none" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLEAN 3-TAB NAVIGATION BAR -->
+    <div class="bg-slate-900 border-t border-slate-800">
+      <div class="max-w-[1440px] mx-auto px-4 flex items-center justify-between gap-2 overflow-x-auto">
+        <nav class="flex items-center gap-1.5 py-1.5">
+          <button id="navTabInterview" onclick="switchMainTab('interview')" class="px-3.5 py-2 rounded-xl text-xs font-extrabold bg-[#2563eb] text-white shadow-sm flex items-center gap-2 transition">
+            <span>🎙️ Live 10-Min Interview</span>
+          </button>
+          <button id="navTabRoster" onclick="switchMainTab('roster')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+            <span>📋 Candidate Roster</span>
+            <span id="rosterCountBadge" class="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-700 text-slate-200">0</span>
+          </button>
+          <button id="navTabLeaderboard" onclick="switchMainTab('leaderboard')" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition">
+            <span>🏆 4-Dataset Leaderboard</span>
+          </button>
+        </nav>
+
+        <div class="hidden md:flex items-center gap-3 text-[11px] text-slate-400">
+          <span id="sheetSyncIndicator" class="text-emerald-400 font-semibold">● Tracker Ready</span>
+          <span>•</span>
+          <span>Selected Cohort: <strong id="topQuotaSummary" class="text-emerald-400">0 / 7–10</strong></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOAST NOTIFICATION BANNER -->
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs font-semibold flex items-center gap-2.5">
+    <span id="toastIcon">✅</span>
+    <span id="toastText">Saved</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 1: MAIN LIVE 10-MIN INTERVIEW WORKSPACE (ALL 8 QUESTIONS VISIBLE) -->
+  <!-- ===================================================================== -->
+  <main id="tabViewInterview" class="flex-1 max-w-[1440px] w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- LEFT COLUMN (7 COLS): CANDIDATE BAR + ALL 8 VISIBLE QUESTIONS + AI ANALYSIS -->
+    <section class="lg:col-span-7 flex flex-col gap-4">
+
+      <!-- Active Candidate Selector & Dataset 1 (Assessment Score) -->
+      <div id="candidateHeroCard" class="bg-white rounded-2xl border-2 border-blue-200 p-4 shadow-sm transition-colors">
+        <div class="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-slate-100">
+          <div class="flex-1 min-w-[230px]">
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="activePanelPill" class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold bg-blue-600 text-white">Panel 1</span>
+              <span id="activeRefBadge" class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">SL-7017</span>
+              <select id="quickSwitchCandidateSelect" onchange="quickSwitchCandidate(this.value)" class="text-sm sm:text-base font-extrabold text-slate-900 bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 outline-none focus:border-blue-500 max-w-[260px]">
+                <!-- Populated dynamically -->
+              </select>
+              <span id="activeProfileTag" class="px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-100 text-blue-800">TECHNICAL</span>
+            </div>
+            <p id="activeCandMeta" class="text-xs text-slate-500 mt-1">Degree: — • Evaluators: Snr Designer &amp; Jnr Tech</p>
+          </div>
+
+          <!-- Quick Walk-In Toggle + Verdict Selector -->
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="openQuickWalkInModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300">
+              ✏️ Quick Walk-In
+            </button>
+            <div>
+              <select id="activeVerdictSelect" onchange="updateCandidateVerdict(this.value)" class="text-xs font-extrabold rounded-xl border border-slate-300 px-2.5 py-1.5 bg-slate-50 focus:border-blue-500 outline-none">
+                <option value="Pending">⏳ Pending</option>
+                <option value="Strong Hire">🌟 Strong Hire</option>
+                <option value="Shortlist">✅ Shortlist</option>
+                <option value="Hold">⏸️ Hold</option>
+                <option value="Reject">❌ Reject</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- DATASET 1: Online Assessment Score + Global Audio Telemetry -->
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Dataset 1 • Online Assessment</span>
+              <div class="flex items-center gap-2 mt-1">
+                <input type="number" id="inputAssessmentScore" min="0" max="30" value="0" onchange="updateAssessmentData()" class="w-14 px-2 py-1 text-sm font-extrabold text-center rounded-lg border border-slate-300 bg-white" />
+                <span class="text-xs font-bold text-slate-600">/ 30</span>
+                <span id="assessmentPctBadge" class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-xs font-extrabold">0%</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="btnToggleTech" onclick="setCandidateProfile('TECH')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#2563eb] text-white">Tech</button>
+              <button type="button" id="btnToggleNonTech" onclick="setCandidateProfile('NON-TECH')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-600">Non-Tech</button>
+            </div>
+          </div>
+
+          <!-- Live Audio & Speech Telemetry -->
+          <div class="bg-blue-50/70 rounded-xl p-3 border border-blue-200 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-800">🎙️ Speech &amp; Fluency Telemetry</span>
+              <div class="flex items-center gap-3 mt-1 text-xs font-bold text-slate-700">
+                <span>⏱️ <strong id="telemetryDuration">0s</strong></span>
+                <span>🗣️ <strong id="telemetryWpm">0</strong> WPM</span>
+                <span>⚠️ Fillers: <strong id="telemetryFillers" class="text-amber-700">0</strong></span>
+              </div>
+            </div>
+            <button type="button" id="btnGlobalAudioToggle" onclick="toggleGlobalRecording()" class="relative px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold shadow flex items-center gap-1.5 transition">
+              <span class="w-2 h-2 rounded-full bg-white"></span>
+              <span id="globalRecLabel">Record Full Session</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Global Session Audio Playback Strip -->
+        <div id="globalAudioPlaybackBar" class="hidden mt-2.5 bg-slate-900 text-white rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span class="font-bold text-emerald-400">🎧 Full Interview Audio Captured (Sent to Gemini AI):</span>
+          <audio id="globalAudioPlayer" controls class="h-8 max-w-xs"></audio>
+        </div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- DATASET 2: ALL 8 INTERVIEW QUESTIONS (IMMEDIATELY VISIBLE!)         -->
+      <!-- =================================================================== -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
+          <div>
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-blue-600">Dataset 2 • 10-Minute Structured Question Guide (Q1–Q8)</span>
+            <h2 class="text-base font-extrabold text-slate-900">Questions to Ask + Live Audio Capture &amp; AI Analysis</h2>
+          </div>
+          <button type="button" onclick="toggleAllCheatSheets()" id="btnCheatToggle" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-xs font-extrabold transition shadow-xs">
+            💡 Senior Designer Cheat Sheet: ON
+          </button>
+        </div>
+
+        <!-- ALL 8 QUESTIONS RENDERED DIRECTLY IN FULL VIEW (NO HIDDEN ACCORDION) -->
+        <div id="questionsContainer" class="space-y-3.5">
+          <!-- Immediately populated on load with all 8 questions -->
+        </div>
+
+        <!-- Gemini AI Evaluation Trigger & Output -->
+        <div class="mt-4 pt-4 border-t border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <button type="button" id="btnRunAiAnalysis" onclick="analyzeInterviewWithGemini()" class="flex-1 min-w-[230px] py-3 px-4 rounded-xl bg-gradient-to-r from-[#0f172a] to-[#2563eb] hover:opacity-95 text-white text-xs font-extrabold shadow-md flex items-center justify-center gap-2 transition">
+              <span>✨ Analyze Audio &amp; Answers with Gemini AI</span>
+            </button>
+            <div class="flex items-center gap-2">
+              <div class="text-right bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl">
+                <div class="text-[9px] font-bold uppercase text-blue-700">Content AI</div>
+                <div id="aiContentScoreDisplay" class="text-sm font-extrabold text-blue-900">—%</div>
+              </div>
+              <div class="text-right bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-xl">
+                <div class="text-[9px] font-bold uppercase text-purple-700">Comm AI</div>
+                <div id="aiCommScoreDisplay" class="text-sm font-extrabold text-purple-900">—%</div>
+              </div>
+              <div class="text-right bg-slate-900 text-white px-3 py-1.5 rounded-xl">
+                <div class="text-[9px] font-bold uppercase text-blue-300">Combined AI</div>
+                <div id="aiScoreDisplay" class="text-sm font-extrabold">— / 100</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="aiResultCard" class="mt-3 hidden bg-slate-900 text-slate-100 rounded-xl p-3.5 text-xs space-y-2 border border-slate-700">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-blue-300 uppercase tracking-wider text-[10px]">Gemini Multimodal Answer &amp; Communication Report</span>
+              <span id="aiFitBadge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">Role Fit</span>
+            </div>
+            <p id="aiSummaryText" class="text-slate-200 leading-relaxed"></p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+                <div class="text-[10px] font-bold text-emerald-400 uppercase mb-0.5">Technical / Content</div>
+                <div id="aiStrengthsText" class="text-[11px] text-slate-300"></div>
+              </div>
+              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+                <div class="text-[10px] font-bold text-purple-400 uppercase mb-0.5">Communication &amp; Fluency</div>
+                <div id="aiCommNotesText" class="text-[11px] text-slate-300"></div>
+              </div>
+              <div class="bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+                <div class="text-[10px] font-bold text-amber-400 uppercase mb-0.5">Gaps / Follow-up</div>
+                <div id="aiGapsText" class="text-[11px] text-slate-300"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- RIGHT COLUMN (5 COLS): STICKY ZERO-DEFAULT PANEL SCORECARDS & SUBMIT  -->
+    <!-- =================================================================== -->
+    <section class="lg:col-span-5 flex flex-col gap-4">
+      <div class="lg:sticky lg:top-[132px] space-y-4">
+
+        <!-- COMPOSITE SCORE HERO BANNER -->
+        <div class="bg-gradient-to-br from-[#0f172a] via-slate-900 to-[#1e3a8a] text-white rounded-2xl p-4 shadow-md border border-slate-800">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-widest text-blue-300">Unified 4-Dataset Score (<span id="bannerPanelLbl">Panel 1</span>)</span>
+              <div class="flex items-baseline gap-2 mt-0.5">
+                <span id="compositeScoreBig" class="text-3xl font-extrabold tracking-tight">0.0%</span>
+                <span class="text-xs font-semibold text-slate-300">Composite Index</span>
+              </div>
+            </div>
+            <div class="text-right text-[11px] space-y-0.5 text-slate-300">
+              <div>1. Assessment: <strong id="miniTestPct" class="text-white">0%</strong></div>
+              <div>2. AI Audio/Q&amp;A: <strong id="miniAiPct" class="text-blue-300">Pending</strong></div>
+              <div>3. Snr Designer: <strong id="miniSnrPct" class="text-amber-300">0%</strong></div>
+              <div>4. Jnr Tech: <strong id="miniIntPct" class="text-emerald-300">0%</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DATASET 3: INTERVIEW PANEL: SNR DESIGNER (ZERO-DEFAULT RATINGS) -->
+        <div class="bg-white rounded-2xl border-2 border-amber-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">Dataset 3 • Interview Panel: Snr Designer</span>
+                <span id="snrZeroWarnBadge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded">Default 0 — Rate 0–5</span>
+              </div>
+              <h3 class="text-sm font-extrabold text-slate-900 mt-1">Communication, UX &amp; Course Sense</h3>
+            </div>
+            <div class="text-right">
+              <div id="snrTotalBadge" class="text-sm font-extrabold text-amber-700">0 / 20 (0%)</div>
+            </div>
+          </div>
+
+          <div class="space-y-2.5 text-xs">
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 mb-1">
+                <span>1. Communication &amp; Confidence (Q1, Q2)</span>
+                <span id="valSnr1" class="text-amber-700 font-extrabold">0 / 5</span>
+              </div>
+              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr1" class="w-full amber-slider" />
+            </div>
+
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 mb-1">
+                <span>2. Project &amp; End-User Clarity (Q2)</span>
+                <span id="valSnr2" class="text-amber-700 font-extrabold">0 / 5</span>
+              </div>
+              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr2" class="w-full amber-slider" />
+            </div>
+
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 mb-1">
+                <span>3. UI/UX &amp; Landing Page Sense (Q5)</span>
+                <span id="valSnr3" class="text-amber-700 font-extrabold">0 / 5</span>
+              </div>
+              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr3" class="w-full amber-slider" />
+            </div>
+
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 mb-1">
+                <span>4. Course Ownership &amp; Presence of Mind (Q8)</span>
+                <span id="valSnr4" class="text-amber-700 font-extrabold">0 / 5</span>
+              </div>
+              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderSnr4" class="w-full amber-slider" />
+            </div>
+
+            <input type="text" id="snrNotesInput" onchange="updatePanelRatings()" placeholder="Snr Designer feedback note..." class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-400 outline-none" />
+          </div>
+        </div>
+
+        <!-- DATASET 4: INTERVIEW PANEL: JNR TECH (ZERO-DEFAULT RATINGS) -->
+        <div class="bg-white rounded-2xl border-2 border-emerald-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Dataset 4 • Interview Panel: Jnr Tech</span>
+                <span id="intZeroWarnBadge" class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded">Default 0 — Rate 0–5</span>
+              </div>
+              <h3 class="text-sm font-extrabold text-slate-900 mt-1">Technical Depth &amp; Coding Logic</h3>
+            </div>
+            <div class="text-right">
+              <div id="intTotalBadge" class="text-sm font-extrabold text-emerald-700">0 / 20 (0%)</div>
+            </div>
+          </div>
+
+          <div class="space-y-2.5 text-xs">
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 mb-1">
+                <span>1. Config &amp; API Fundamentals (Q3, Q4)</span>
+                <span id="valInt1" class="text-emerald-700 font-extrabold">0 / 5</span>
+              </div>
+              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt1" class="w-full emerald-slider" />
+            </div>
+
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 mb-1">
+                <span>2. HTML &amp; Web Structure (Q5)</span>
+                <span id="valInt2" class="text-emerald-700 font-extrabold">0 / 5</span>
+              </div>
+              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt2" class="w-full emerald-slider" />
+            </div>
+
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 mb-1">
+                <span>3. Logic &amp; Divisibility Problem (Q6)</span>
+                <span id="valInt3" class="text-emerald-700 font-extrabold">0 / 5</span>
+              </div>
+              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt3" class="w-full emerald-slider" />
+            </div>
+
+            <div>
+              <div class="flex justify-between font-bold text-slate-700 mb-1">
+                <span>4. Single-Pass Duplicate Removal (Q7)</span>
+                <span id="valInt4" class="text-emerald-700 font-extrabold">0 / 5</span>
+              </div>
+              <input type="range" min="0" max="5" value="0" oninput="updatePanelRatings()" id="sliderInt4" class="w-full emerald-slider" />
+            </div>
+
+            <input type="text" id="intNotesInput" onchange="updatePanelRatings()" placeholder="Jnr Tech feedback note..." class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 outline-none" />
+          </div>
+        </div>
+
+        <!-- MANDATORY SUBMIT TRIGGER BUTTON -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col gap-2">
+          <button type="button" onclick="openSubmitConfirmationModal()" class="w-full py-3.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-extrabold shadow-lg flex items-center justify-center gap-2 transition">
+            <span>✅ Submit Candidate Evaluation</span>
+          </button>
+          <p id="f2fSheetPushStatus" class="text-[11px] text-center text-slate-500">
+            Opens confirmation pop-up &amp; pushes all 4 datasets to <strong>"Face to Face - Interview"</strong> tab in Google Sheets.
+          </p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 2: CANDIDATE ROSTER & GOOGLE SHEET SYNC SUB-TAB                   -->
+  <!-- ===================================================================== -->
+  <section id="tabViewRoster" class="hidden flex-1 max-w-[1440px] w-full mx-auto p-4 space-y-5">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <!-- Live Google Sheet Sync + Paste Fallback (4 Cols) -->
+      <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col gap-3">
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Live Tracker Connection</span>
+          <h2 class="text-base font-extrabold text-slate-900 mt-1">Auto-Sync Walk-In Drive Results</h2>
+          <p class="text-xs text-slate-500 mt-1">
+            Pulls candidates &amp; assessment scores from Tab 1 of your Google Sheet and writes F2F results into <strong>"Face to Face - Interview"</strong>.
+          </p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+          <label class="block text-[10px] font-extrabold uppercase text-slate-500">Google Apps Script Webhook URL</label>
+          <input type="text" id="trackerWebhookInput" onchange="updateTrackerWebhook(this.value)" class="w-full px-2.5 py-1.5 text-[11px] font-mono rounded-lg border border-slate-300 bg-white text-slate-700" />
+          <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-700 cursor-pointer pt-1">
+            <input type="checkbox" id="chkExcludeDisqualified" checked onchange="fetchCandidatesFromGoogleSheet(false)" class="rounded" />
+            <span>Hide Disqualified candidates when importing</span>
+          </label>
+        </div>
+
+        <button type="button" id="btnRosterSyncNow" onclick="fetchCandidatesFromGoogleSheet(false)" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow flex items-center justify-center gap-2 transition">
+          <span>🔄 Fetch Latest Candidates from Google Sheet</span>
+        </button>
+
+        <div class="pt-3 border-t border-slate-100">
+          <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Manual TSV Paste Fallback (Offline)</label>
+          <textarea id="bulkSheetPasteInput" rows="4" placeholder="Paste Google Sheet rows here if offline..."
+            class="w-full p-2.5 text-xs font-mono rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-blue-500 outline-none"></textarea>
+
+          <div class="flex gap-2 mt-2">
+            <button type="button" onclick="importFromSheetPaste()" class="flex-1 py-2 px-3 rounded-xl bg-[#2563eb] hover:bg-blue-700 text-white text-xs font-bold">
+              📥 Import Pasted Rows
+            </button>
+            <button type="button" onclick="openQuickWalkInModal()" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold">
+              + Walk-In
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Candidate Roster Table (8 Cols) -->
+      <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-base font-extrabold text-slate-900">Walk-In Candidate Roster</h2>
+            <p class="text-xs text-slate-500">Click <strong>Start Interview &rarr;</strong> to assign the candidate to your active Panel (<strong id="rosterActivePanelNote">Panel 1</strong>).</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="rosterSearchInput" oninput="renderRosterTable()" placeholder="Search name, Ref ID, degree..." class="px-3 py-1.5 text-xs rounded-xl border border-slate-300 outline-none focus:border-blue-500" />
+            <div class="flex gap-1 bg-slate-100 p-1 rounded-xl">
+              <button onclick="setRosterFilter('ALL')" id="filterALL" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white">All</button>
+              <button onclick="setRosterFilter('PENDING')" id="filterPENDING" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Pending</button>
+              <button onclick="setRosterFilter('COMPLETED')" id="filterCOMPLETED" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Completed</button>
+              <button onclick="setRosterFilter('TECH')" id="filterTECH" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Tech</button>
+              <button onclick="setRosterFilter('NON-TECH')" id="filterNONTECH" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Non-Tech</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50">
+                <th class="py-2.5 px-3">Ref ID</th>
+                <th class="py-2.5 px-3">Candidate &amp; Degree</th>
+                <th class="py-2.5 px-3">Track</th>
+                <th class="py-2.5 px-3">Test (/30)</th>
+                <th class="py-2.5 px-3">Panel</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="rosterTableBody" class="divide-y divide-slate-100">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 3: 4-DATASET COMPOSITE LEADERBOARD (FILTERABLE BY PANEL 1–6)      -->
+  <!-- ===================================================================== -->
+  <section id="tabViewLeaderboard" class="hidden flex-1 max-w-[1440px] w-full mx-auto p-4 space-y-5">
+    <!-- Quota Summary Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="text-xs font-bold text-slate-500">Target Cohort Size</div>
+        <div class="text-2xl font-extrabold text-slate-900 mt-1">7 – 10 <span class="text-xs font-semibold text-slate-400">Interns</span></div>
+        <div class="text-[11px] text-slate-500 mt-1">4–6 Tech + 3–4 Non-Tech</div>
+      </div>
+      <div class="bg-emerald-50 rounded-2xl border border-emerald-200 p-4 shadow-sm">
+        <div class="text-xs font-bold text-emerald-800">Strong Hire</div>
+        <div id="statStrongHire" class="text-2xl font-extrabold text-emerald-700 mt-1">0</div>
+        <div class="text-[11px] text-emerald-700 mt-1">Immediate offer ready</div>
+      </div>
+      <div class="bg-blue-50 rounded-2xl border border-blue-200 p-4 shadow-sm">
+        <div class="text-xs font-bold text-blue-800">Shortlisted</div>
+        <div id="statShortlist" class="text-2xl font-extrabold text-blue-700 mt-1">0</div>
+        <div class="text-[11px] text-blue-700 mt-1">Backup / calibration</div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="text-xs font-bold text-slate-500">Total Roster</div>
+        <div id="statTotalCand" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
+        <div class="text-[11px] text-slate-500 mt-1">Across all panels</div>
+      </div>
+    </div>
+
+    <!-- Ranked 4-Dataset Leaderboard Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-base font-extrabold text-slate-900">Ranked 4-Dataset Candidate Leaderboard</h2>
+          <p class="text-xs text-slate-500">Filter by Panel to compare evaluations across all interview tables or export the combined cohort.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Panel Filter Pills -->
+          <div class="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl">
+            <button onclick="setLeaderboardPanelFilter('ALL')" id="lbFilter_ALL" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white">All Panels</button>
+            <button onclick="setLeaderboardPanelFilter('Panel 1')" id="lbFilter_Panel 1" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 1</button>
+            <button onclick="setLeaderboardPanelFilter('Panel 2')" id="lbFilter_Panel 2" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 2</button>
+            <button onclick="setLeaderboardPanelFilter('Panel 3')" id="lbFilter_Panel 3" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 3</button>
+            <button onclick="setLeaderboardPanelFilter('Panel 4')" id="lbFilter_Panel 4" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 4</button>
+            <button onclick="setLeaderboardPanelFilter('Panel 5')" id="lbFilter_Panel 5" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 5</button>
+            <button onclick="setLeaderboardPanelFilter('Panel 6')" id="lbFilter_Panel 6" class="px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600">Panel 6</button>
+          </div>
+
+          <button type="button" onclick="exportToCSV()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow">
+            📥 Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50">
+              <th class="py-3 px-3">Rank</th>
+              <th class="py-3 px-3">Panel</th>
+              <th class="py-3 px-3">Candidate</th>
+              <th class="py-3 px-3">1. Assessment</th>
+              <th class="py-3 px-3">2. AI Content + Comm</th>
+              <th class="py-3 px-3">3. Snr Designer</th>
+              <th class="py-3 px-3">4. Jnr Tech</th>
+              <th class="py-3 px-3">Composite</th>
+              <th class="py-3 px-3">Verdict</th>
+              <th class="py-3 px-3 text-right">Open</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardTableBody" class="divide-y divide-slate-100">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- MANDATORY SUBMIT CONFIRMATION POP-UP MODAL                            -->
+  <!-- ===================================================================== -->
+  <div id="submitConfirmModal" class="fixed inset-0 z-50 hidden bg-slate-900/80 flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full rounded-2xl p-6 shadow-2xl border-2 border-slate-200">
+      <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="modalPanelBadge" class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-extrabold uppercase">Panel 1</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase">4-Dataset Verification</span>
+          </div>
+          <h3 class="text-lg font-extrabold text-slate-900 mt-1">Submit Candidate Evaluation?</h3>
+          <p id="modalSubmitCandInfo" class="text-xs text-slate-500">Candidate: —</p>
+        </div>
+        <button type="button" onclick="closeSubmitConfirmationModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+      </div>
+
+      <!-- Warning Alert Box if Ratings are 0 or AI hasn't run -->
+      <div id="modalSubmitWarnings" class="hidden mt-3 bg-amber-50 border border-amber-300 rounded-xl p-3 text-xs text-amber-900 space-y-1"></div>
+
+      <!-- 4-Dataset Breakdown Grid -->
+      <div class="grid grid-cols-2 gap-2.5 mt-4 text-xs">
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="text-[10px] font-bold uppercase text-slate-500">1. Online Assessment</div>
+          <div id="modalSumTest" class="text-base font-extrabold text-slate-900 mt-0.5">0 / 30 (0%)</div>
+        </div>
+        <div class="p-3 rounded-xl bg-blue-50 border border-blue-200">
+          <div class="text-[10px] font-bold uppercase text-blue-700">2. AI Audio &amp; Q&amp;A</div>
+          <div id="modalSumAi" class="text-base font-extrabold text-blue-900 mt-0.5">Not Run</div>
+        </div>
+        <div id="modalCardSnr" class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+          <div class="text-[10px] font-bold uppercase text-amber-800">3. Interview Panel: Snr Designer</div>
+          <div id="modalSumSnr" class="text-base font-extrabold text-amber-900 mt-0.5">0 / 20 (0%)</div>
+        </div>
+        <div id="modalCardInt" class="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+          <div class="text-[10px] font-bold uppercase text-emerald-800">4. Interview Panel: Jnr Tech</div>
+          <div id="modalSumInt" class="text-base font-extrabold text-emerald-900 mt-0.5">0 / 20 (0%)</div>
+        </div>
+      </div>
+
+      <!-- Final Composite & Verdict Selector -->
+      <div class="mt-4 p-3.5 rounded-xl bg-slate-900 text-white flex items-center justify-between gap-3">
+        <div>
+          <div class="text-[10px] font-bold uppercase tracking-wider text-blue-300">Final Composite Score</div>
+          <div id="modalSumComposite" class="text-2xl font-extrabold">0.0%</div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Confirm Verdict</label>
+          <select id="modalVerdictSelect" onchange="updateCandidateVerdict(this.value)" class="text-xs font-extrabold rounded-xl bg-slate-800 border border-slate-600 text-white px-3 py-1.5 outline-none">
+            <option value="Strong Hire">🌟 Strong Hire</option>
+            <option value="Shortlist">✅ Shortlist</option>
+            <option value="Hold">⏸️ Hold</option>
+            <option value="Reject">❌ Reject</option>
+            <option value="Pending">⏳ Pending</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Modal Action Buttons -->
+      <div class="flex flex-wrap gap-2 mt-5">
+        <button type="button" onclick="closeSubmitConfirmationModal()" class="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700">
+          &larr; Go Back &amp; Edit
+        </button>
+        <button type="button" id="btnModalRunAiFirst" onclick="runAiFromModal()" class="hidden py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">
+          ✨ Run AI First
+        </button>
+        <button type="button" onclick="confirmAndFinalizeSubmission()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow-md">
+          Confirm &amp; Push to Sheet ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- QUICK WALK-IN / PAPER ENTRY MODAL                                     -->
+  <!-- ===================================================================== -->
+  <div id="quickWalkInModal" class="fixed inset-0 z-50 hidden bg-slate-900/75 flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full rounded-2xl p-5 shadow-2xl border border-slate-200">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-extrabold text-slate-900">Quick Walk-In / Paper Candidate Entry</h3>
+          <p class="text-[11px] text-slate-500">Use if candidate isn't synced yet or took the paper backup test.</p>
+        </div>
+        <button type="button" onclick="closeQuickWalkInModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+      </div>
+
+      <div class="space-y-3 mt-3 text-xs">
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Ref ID</label>
+            <input type="text" id="newCandRef" placeholder="SL-8012" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 font-mono" />
+          </div>
+          <div class="col-span-2">
+            <label class="block font-bold text-slate-700 mb-1">Full Name *</label>
+            <input type="text" id="newCandName" placeholder="Candidate Full Name" class="w-full px-2.5 py-2 rounded-xl border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Graduation Degree</label>
+            <input type="text" id="newCandDegree" placeholder="B.Tech / BCA / B.Com" class="w-full px-2.5 py-2 rounded-xl border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Test Score (/ 30)</label>
+            <input type="number" id="newCandScore" min="0" max="30" value="0" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 font-bold" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Background Track</label>
+          <div class="flex gap-2">
+            <label class="flex-1 flex items-center gap-2 p-2 rounded-xl border border-slate-200 cursor-pointer">
+              <input type="radio" name="newCandProfile" value="TECH" checked />
+              <span class="font-bold text-blue-700">Technical</span>
+            </label>
+            <label class="flex-1 flex items-center gap-2 p-2 rounded-xl border border-slate-200 cursor-pointer">
+              <input type="radio" name="newCandProfile" value="NON-TECH" />
+              <span class="font-bold text-rose-700">Non-Tech</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-5">
+        <button type="button" onclick="closeQuickWalkInModal()" class="flex-1 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700">Cancel</button>
+        <button type="button" onclick="saveNewCandidate()" class="flex-1 py-2.5 rounded-xl bg-[#2563eb] text-white text-xs font-extrabold">Load Candidate &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- COMPOSITE WEIGHT CALIBRATION MODAL                                    -->
+  <!-- ===================================================================== -->
+  <div id="weightModal" class="fixed inset-0 z-50 hidden bg-slate-900/75 flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full rounded-2xl p-5 shadow-2xl border border-slate-200">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h3 class="text-base font-extrabold text-slate-900">Calibrate 4-Dataset Weights</h3>
+        <button type="button" onclick="closeWeightModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 mt-2">Adjust relative weights across the 4 datasets (auto-normalized to 100%).</p>
+
+      <div class="space-y-3 mt-4 text-xs">
+        <div>
+          <div class="flex justify-between font-bold"><span>1. Online Assessment (/30)</span><span id="wLblTest">25%</span></div>
+          <input type="range" min="0" max="100" value="25" id="wSliderTest" oninput="updateWeightsUI()" class="w-full" />
+        </div>
+        <div>
+          <div class="flex justify-between font-bold text-blue-700"><span>2. Gemini AI Content + Comm</span><span id="wLblAi">25%</span></div>
+          <input type="range" min="0" max="100" value="25" id="wSliderAi" oninput="updateWeightsUI()" class="w-full" />
+        </div>
+        <div>
+          <div class="flex justify-between font-bold text-amber-700"><span>3. Interview Panel: Snr Designer</span><span id="wLblSnr">25%</span></div>
+          <input type="range" min="0" max="100" value="25" id="wSliderSnr" oninput="updateWeightsUI()" class="w-full amber-slider" />
+        </div>
+        <div>
+          <div class="flex justify-between font-bold text-emerald-700"><span>4. Interview Panel: Jnr Tech</span><span id="wLblInt">25%</span></div>
+          <input type="range" min="0" max="100" value="25" id="wSliderInt" oninput="updateWeightsUI()" class="w-full emerald-slider" />
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-5">
+        <button type="button" onclick="resetDefaultWeights()" class="px-3 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-700">Reset 25% Equal</button>
+        <button type="button" onclick="closeWeightModal()" class="flex-1 py-2 rounded-xl bg-[#2563eb] text-white text-xs font-extrabold">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // CONFIGURATION & PANEL COLOR THEMES (PANEL 1 TO PANEL 6)
+    // =========================================================================
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxcnildeWJka3_Ry0vJnf77SRzX_38YLiyaU7KeSTjWYAUwsg0kKkS1BXN3A4iWK1fh/exec";
+    const GEMINI_MODEL = "gemini-2.5-flash";
+    const apiKey = ""; // Injected at runtime
+    const STORAGE_KEY = "simplilearn_f2f_multipanel_v4";
+    const F2F_PENDING_SYNC_KEY = "simplilearn_f2f_pending_queue_v4";
+
+    const PANEL_THEMES = {
+      "Panel 1": {
+        pill: "bg-blue-600 text-white",
+        headerBadge: "bg-blue-500/20 text-blue-300 border-blue-400/40",
+        strip: "bg-blue-950/90 border-blue-800/60",
+        logo: "bg-blue-600",
+        cardBorder: "border-blue-300",
+        activeBtn: "bg-blue-600 text-white shadow"
+      },
+      "Panel 2": {
+        pill: "bg-emerald-600 text-white",
+        headerBadge: "bg-emerald-500/20 text-emerald-300 border-emerald-400/40",
+        strip: "bg-emerald-950/90 border-emerald-800/60",
+        logo: "bg-emerald-600",
+        cardBorder: "border-emerald-300",
+        activeBtn: "bg-emerald-600 text-white shadow"
+      },
+      "Panel 3": {
+        pill: "bg-purple-600 text-white",
+        headerBadge: "bg-purple-500/20 text-purple-300 border-purple-400/40",
+        strip: "bg-purple-950/90 border-purple-800/60",
+        logo: "bg-purple-600",
+        cardBorder: "border-purple-300",
+        activeBtn: "bg-purple-600 text-white shadow"
+      },
+      "Panel 4": {
+        pill: "bg-amber-600 text-white",
+        headerBadge: "bg-amber-500/20 text-amber-300 border-amber-400/40",
+        strip: "bg-amber-950/90 border-amber-800/60",
+        logo: "bg-amber-600",
+        cardBorder: "border-amber-300",
+        activeBtn: "bg-amber-600 text-white shadow"
+      },
+      "Panel 5": {
+        pill: "bg-rose-600 text-white",
+        headerBadge: "bg-rose-500/20 text-rose-300 border-rose-400/40",
+        strip: "bg-rose-950/90 border-rose-800/60",
+        logo: "bg-rose-600",
+        cardBorder: "border-rose-300",
+        activeBtn: "bg-rose-600 text-white shadow"
+      },
+      "Panel 6": {
+        pill: "bg-cyan-600 text-white",
+        headerBadge: "bg-cyan-500/20 text-cyan-300 border-cyan-400/40",
+        strip: "bg-cyan-950/90 border-cyan-800/60",
+        logo: "bg-cyan-600",
+        cardBorder: "border-cyan-300",
+        activeBtn: "bg-cyan-600 text-white shadow"
+      }
+    };
+
+    // =========================================================================
+    // 8 STRUCTURED F2F INTERVIEW QUESTIONS (ALWAYS VISIBLE + CHEAT SHEET)
+    // =========================================================================
+    const INTERVIEW_QUESTIONS = [
+      {
+        id: "q1",
+        phase: "0–1.5m",
+        title: "Q1. Company Research & Motivation",
+        prompt: "What did you research about Simplilearn, and why does this role fit your career goals?",
+        cheatSheet: "Look for knowledge of Simplilearn's digital upskilling bootcamps in AI, Cloud, Data, and Software, plus genuine enthusiasm for learner-centric education.",
+        quickChips: ["Researched bootcamps & AI", "Strong learner passion", "Generic answer", "Did not research"]
+      },
+      {
+        id: "q2",
+        phase: "1.5–3m",
+        title: "Q2. Self-Intro & Project Walkthrough",
+        prompt: "Walk us through yourself and one key project you built or worked on—explain how an end user experiences it.",
+        cheatSheet: "Evaluates confidence, clarity, structured communication, and ability to explain complex workflows in simple end-user terms.",
+        quickChips: ["Crystal clear end-user view", "Confident & structured", "Too technical / unclear", "Low confidence"]
+      },
+      {
+        id: "q3",
+        phase: "3–4.5m",
+        title: "Q3. Config Files — What, Why & Where",
+        prompt: "What is a configuration file? Why and where do we use it in applications?",
+        cheatSheet: "A settings file like .json, .yaml, or .env that keeps passwords, API keys, and environment settings separate from core code so teams can update behavior without rewriting software.",
+        quickChips: ["Explained .env/.json + why", "Basic idea only", "Confused with database", "Skipped (Non-Tech)"]
+      },
+      {
+        id: "q4",
+        phase: "4.5–6m",
+        title: "Q4. APIs & API Testing",
+        prompt: "What is an API, and how do you perform API testing?",
+        cheatSheet: "An API lets two apps talk to each other like a waiter taking orders. Testing uses tools like Postman to send GET/POST requests and check status codes like 200 OK vs 404/500 errors.",
+        quickChips: ["Postman + 200/400/500 codes", "Knows GET/POST", "Only basic definition", "Skipped (Non-Tech)"]
+      },
+      {
+        id: "q5",
+        phase: "6–7.5m",
+        title: "Q5. UI Design vs. UI Development + HTML",
+        prompt: "How is UI design related to UI development? Also answer basic HTML structure questions (semantic tags, forms, media).",
+        cheatSheet: "UI Design creates the visual blueprint in Figma; UI Development turns it into live browser code using HTML for structure, CSS for styling, and JS for interactivity.",
+        quickChips: ["Strong Figma-to-HTML link", "Knows semantic HTML tags", "Strong UX / weak HTML", "Needs guidance"]
+      },
+      {
+        id: "q6",
+        phase: "7.5–8.5m",
+        title: "Q6. Logic / Coding — Divisibility Without / or %",
+        prompt: "Given two numbers like 40 and 5, how do you check if 40 is divisible by 5 WITHOUT using division (/) or modulus (%) operators? (Tech candidates: write/explain code logic)",
+        cheatSheet: "Subtract 5 repeatedly from 40 until you reach 0 (divisible) or go below 0 (not divisible). Works for any two numbers without division!",
+        quickChips: ["Repeated subtraction logic", "Repeated addition logic", "Last-digit 0/5 trick", "Could not solve"]
+      },
+      {
+        id: "q7",
+        phase: "8.5–9.5m",
+        title: "Q7. Logic / Coding — Remove Duplicates in Single Iteration",
+        prompt: "Given the list {1, 2, 4, 5, 1, 6, 4, 8, 9, 9}, how do you remove duplicates in a single pass (or without single pass) in any language?",
+        cheatSheet: "Walk through the list once while keeping a 'seen' checklist/Set. If a number isn't on the checklist yet, keep it and check it off—giving {1, 2, 4, 5, 6, 8, 9}.",
+        quickChips: ["HashSet / dict in 1 pass", "Nested loop / sort (2 pass)", "Syntax struggle", "Non-Tech (AI prompt alt)"]
+      },
+      {
+        id: "q8",
+        phase: "9.5–10m",
+        title: "Q8. Presence of Mind / Composure",
+        prompt: "If I ask you to jump from the window right now, what is your answer?",
+        cheatSheet: "Quick wit & composure check—classic answer: 'I will jump inward into the room, not outside toward the ground.' Keep light and non-punitive.",
+        quickChips: ["Jumped inward into room!", "Asked which floor/browser", "Refused politely", "Frozen / confused"]
+      }
+    ];
+
+    const FILLER_WORDS = ["um", "uh", "like", "actually", "basically", "you know", "sort of", "kind of", "literally"];
+
+    // =========================================================================
+    // APPLICATION STATE (WITH REALISTIC SAMPLE CANDIDATES FOR IMMEDIATE USE)
+    // =========================================================================
+    let state = {
+      trackerWebhookUrl: WEBHOOK_URL,
+      activePanel: "Panel 1",
+      panelEvaluators: {
+        "Panel 1": { snr: "Snr Designer 1", int: "Jnr Tech 1" },
+        "Panel 2": { snr: "Snr Designer 2", int: "Jnr Tech 2" },
+        "Panel 3": { snr: "Snr Designer 3", int: "Jnr Tech 3" },
+        "Panel 4": { snr: "Snr Designer 4", int: "Jnr Tech 4" },
+        "Panel 5": { snr: "Snr Designer 5", int: "Jnr Tech 5" },
+        "Panel 6": { snr: "Snr Designer 6", int: "Jnr Tech 6" }
+      },
+      candidates: [
+        {
+          id: "c_demo_1",
+          refId: "SL-7017",
+          name: "Aarav Sharma (Sample)",
+          degree: "B.Tech CSE",
+          profile: "TECH",
+          panelPod: "Panel 1",
+          assessmentScore: 24,
+          verdict: "Pending",
+          submitted: false,
+          snrJudge: "Snr Designer 1",
+          intJudge: "Jnr Tech 1",
+          snrRatings: [0, 0, 0, 0],
+          snrNotes: "",
+          intRatings: [0, 0, 0, 0],
+          intNotes: "",
+          notes: {},
+          speechSeconds: 0,
+          aiAnalysis: null
+        },
+        {
+          id: "c_demo_2",
+          refId: "SL-7024",
+          name: "Priya Nair (Sample)",
+          degree: "B.Com / BBA",
+          profile: "NON-TECH",
+          panelPod: "Panel 2",
+          assessmentScore: 15,
+          verdict: "Pending",
+          submitted: false,
+          snrJudge: "Snr Designer 2",
+          intJudge: "Jnr Tech 2",
+          snrRatings: [0, 0, 0, 0],
+          snrNotes: "",
+          intRatings: [0, 0, 0, 0],
+          intNotes: "",
+          notes: {},
+          speechSeconds: 0,
+          aiAnalysis: null
+        }
+      ],
+      activeId: "c_demo_1",
+      activeTab: "interview",
+      rosterFilter: "ALL",
+      leaderboardPanelFilter: "ALL",
+      showCheatSheet: true,
+      weights: { test: 25, ai: 25, snr: 25, int: 25 }
+    };
+
+    // Audio & Speech Recognition State
+    let activeSpeechRec = null;
+    let activeMediaRecorder = null;
+    let activeAudioChunks = [];
+    let recordingTargetId = null;
+    let speechTimerInterval = null;
+    let audioBlobsByCand = {};
+    let f2fRetryInterval = null;
+
+    // 10-Min Timer State
+    let timerSeconds = 600;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    window.onload = function () {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && Array.isArray(parsed.candidates) && parsed.candidates.length > 0) {
+            state = { ...state, ...parsed };
+          }
+        }
+      } catch (e) {}
+
+      if (!state.trackerWebhookUrl) state.trackerWebhookUrl = WEBHOOK_URL;
+      const whInput = document.getElementById("trackerWebhookInput");
+      if (whInput) whInput.value = state.trackerWebhookUrl;
+
+      applyPanelTheme(state.activePanel || "Panel 1");
+      switchMainTab(state.activeTab || "interview");
+      renderAll();
+
+      // Auto-sync candidates from Tab 1 of Google Sheet on load + flush queued F2F rows
+      fetchCandidatesFromGoogleSheet(true);
+      flushPendingF2FQueue();
+    };
+
+    function persistState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function getActiveCandidate() {
+      return state.candidates.find(c => c.id === state.activeId) || state.candidates[0];
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function showToast(msg, icon = "✅") {
+      const banner = document.getElementById("toastBanner");
+      document.getElementById("toastIcon").textContent = icon;
+      document.getElementById("toastText").textContent = msg;
+      banner.classList.remove("hidden");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => banner.classList.add("hidden"), 3500);
+    }
+
+    // =========================================================================
+    // MULTI-PANEL SWITCHING & COLOR DIFFERENTIATION (PANEL 1 TO PANEL 6)
+    // =========================================================================
+    function selectActivePanel(panelName) {
+      state.activePanel = panelName;
+      const cand = getActiveCandidate();
+      const evalPair = state.panelEvaluators[panelName] || { snr: "Snr Designer", int: "Jnr Tech" };
+
+      if (cand) {
+        cand.panelPod = panelName;
+        cand.snrJudge = evalPair.snr;
+        cand.intJudge = evalPair.int;
+      }
+
+      persistState();
+      applyPanelTheme(panelName);
+      renderAll();
+      showToast(`Switched workspace to ${panelName}`, "🏷️");
+    }
+
+    function applyPanelTheme(panelName) {
+      const theme = PANEL_THEMES[panelName] || PANEL_THEMES["Panel 1"];
+      const evalPair = state.panelEvaluators[panelName] || { snr: "Snr Designer", int: "Jnr Tech" };
+
+      // Update Header & Strip colors
+      document.getElementById("headerPanelBadge").textContent = panelName;
+      document.getElementById("headerPanelBadge").className = `px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${theme.headerBadge}`;
+      document.getElementById("brandLogoBox").className = `w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-xl shadow-inner transition-colors ${theme.logo}`;
+      document.getElementById("panelStripContainer").className = `border-t transition-colors ${theme.strip}`;
+
+      // Update Panel Buttons
+      Object.keys(PANEL_THEMES).forEach(p => {
+        const btn = document.getElementById("panelBtn_" + p);
+        if (!btn) return;
+        if (p === panelName) {
+          btn.className = `px-2.5 py-1 rounded-lg font-extrabold text-[11px] transition ${PANEL_THEMES[p].activeBtn}`;
+        } else {
+          btn.className = "px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800/90 text-slate-300 hover:bg-slate-700 transition";
+        }
+      });
+
+      // Populate Evaluator Name Inputs
+      document.getElementById("panelSnrNameInput").value = evalPair.snr;
+      document.getElementById("panelIntNameInput").value = evalPair.int;
+
+      // Update Active Candidate Card Accent & Roster Note
+      document.getElementById("activePanelPill").textContent = panelName;
+      document.getElementById("activePanelPill").className = `px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold ${theme.pill}`;
+      document.getElementById("candidateHeroCard").className = `bg-white rounded-2xl border-2 p-4 shadow-sm transition-colors ${theme.cardBorder}`;
+      document.getElementById("bannerPanelLbl").textContent = panelName;
+      const rosterNote = document.getElementById("rosterActivePanelNote");
+      if (rosterNote) rosterNote.textContent = panelName;
+    }
+
+    function savePanelEvaluators() {
+      const p = state.activePanel || "Panel 1";
+      const snr = document.getElementById("panelSnrNameInput").value.trim() || "Snr Designer";
+      const int = document.getElementById("panelIntNameInput").value.trim() || "Jnr Tech";
+      state.panelEvaluators[p] = { snr, int };
+
+      const cand = getActiveCandidate();
+      if (cand) {
+        cand.snrJudge = snr;
+        cand.intJudge = int;
+      }
+      persistState();
+      renderActiveWorkspace();
+      showToast(`Saved evaluators for ${p}: ${snr} & ${int}`, "👥");
+    }
+
+    // =========================================================================
+    // TAB NAVIGATION
+    // =========================================================================
+    function switchMainTab(tabName) {
+      state.activeTab = tabName;
+      ["interview", "roster", "leaderboard"].forEach(t => {
+        const viewEl = document.getElementById("tabView" + t.charAt(0).toUpperCase() + t.slice(1));
+        const navBtn = document.getElementById("navTab" + t.charAt(0).toUpperCase() + t.slice(1));
+        if (viewEl) viewEl.classList.toggle("hidden", t !== tabName);
+        if (navBtn) {
+          navBtn.className = t === tabName
+            ? "px-3.5 py-2 rounded-xl text-xs font-extrabold bg-[#2563eb] text-white shadow-sm flex items-center gap-2 transition"
+            : "px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-2 transition";
+        }
+      });
+      persistState();
+      renderAll();
+    }
+
+    // =========================================================================
+    // 10-MINUTE PACING TIMER
+    // =========================================================================
+    function toggleTimer() {
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        document.getElementById("btnTimerToggle").textContent = "Resume";
+      } else {
+        isTimerRunning = true;
+        document.getElementById("btnTimerToggle").textContent = "Pause";
+        timerInterval = setInterval(() => {
+          if (timerSeconds > 0) {
+            timerSeconds--;
+            updateTimerUI();
+          } else {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            document.getElementById("btnTimerToggle").textContent = "Time Up";
+            showToast("10-minute interview slot completed!", "⏰");
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerSeconds = 600;
+      document.getElementById("btnTimerToggle").textContent = "Start 10m";
+      updateTimerUI();
+    }
+
+    function updateTimerUI() {
+      const m = Math.floor(timerSeconds / 60);
+      const s = timerSeconds % 60;
+      document.getElementById("timerDisplay").textContent =
+        `${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}`;
+
+      const pct = Math.round((timerSeconds / 600) * 100);
+      const bar = document.getElementById("timerProgressBar");
+      const badge = document.getElementById("timerPhaseBadge");
+      bar.style.width = `${pct}%`;
+
+      if (timerSeconds > 420) {
+        badge.textContent = "Phase 1: Intro & Company (0–3m)";
+        badge.className = "px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        bar.className = "h-full bg-emerald-400 transition-all duration-500";
+      } else if (timerSeconds > 180) {
+        badge.textContent = "Phase 2: Tech, API & UI (3–7m)";
+        badge.className = "px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30";
+        bar.className = "h-full bg-blue-400 transition-all duration-500";
+      } else {
+        badge.textContent = "Phase 3: Logic & Wrap-Up (7–10m)";
+        badge.className = "px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        bar.className = "h-full bg-amber-400 transition-all duration-500";
+      }
+    }
+
+    // =========================================================================
+    // TWO-WAY GOOGLE SHEET SYNC (INBOUND CANDIDATES + OUTBOUND F2F RESULTS)
+    // =========================================================================
+    function updateTrackerWebhook(url) {
+      state.trackerWebhookUrl = (url || "").trim() || WEBHOOK_URL;
+      persistState();
+      showToast("Tracker webhook updated", "🔗");
+    }
+
+    async function fetchCandidatesFromGoogleSheet(isSilent = false) {
+      const url = state.trackerWebhookUrl || WEBHOOK_URL;
+      const indicator = document.getElementById("sheetSyncIndicator");
+      if (indicator) indicator.textContent = "⏳ Syncing Sheet...";
+
+      try {
+        const resp = await fetch(`${url}?action=getCandidates&t=${Date.now()}`, { method: "GET" });
+        const data = await resp.json();
+
+        if (data && data.result === "success" && Array.isArray(data.candidates)) {
+          const excludeDisq = document.getElementById("chkExcludeDisqualified")?.checked ?? true;
+          const latestByRef = {};
+          data.candidates.forEach(item => {
+            const ref = String(item.refId || "").trim();
+            if (ref) latestByRef[ref] = item;
+          });
+
+          let added = 0;
+          let updated = 0;
+
+          Object.values(latestByRef).forEach(item => {
+            const statusUpper = String(item.status || "").toUpperCase();
+            if (excludeDisq && statusUpper.includes("DISQUALIFIED")) return;
+
+            const profile = String(item.profile || "").toUpperCase().includes("NON-TECH") ? "NON-TECH" : "TECH";
+            const score = Math.min(30, Math.max(0, Number(item.score) || 0));
+
+            const existing = state.candidates.find(c => c.refId.toLowerCase() === item.refId.toLowerCase());
+            if (existing) {
+              existing.name = item.name || existing.name;
+              existing.degree = item.graduation || existing.degree;
+              existing.profile = profile;
+              existing.assessmentScore = score;
+              updated++;
+            } else {
+              // Replace placeholder demo candidates once live sheet rows arrive
+              state.candidates = state.candidates.filter(c => !c.id.startsWith("c_demo_"));
+              const activeP = state.activePanel || "Panel 1";
+              const evalPair = state.panelEvaluators[activeP] || { snr: "Snr Designer 1", int: "Jnr Tech 1" };
+
+              state.candidates.push({
+                id: "c_sheet_" + item.refId.replace(/[^a-zA-Z0-9]/g, ""),
+                refId: item.refId,
+                name: item.name,
+                degree: item.graduation || "Graduate",
+                profile,
+                panelPod: activeP,
+                assessmentScore: score,
+                verdict: "Pending",
+                submitted: false,
+                snrJudge: evalPair.snr,
+                intJudge: evalPair.int,
+                snrRatings: [0, 0, 0, 0],
+                snrNotes: "",
+                intRatings: [0, 0, 0, 0],
+                intNotes: "",
+                notes: {},
+                speechSeconds: 0,
+                aiAnalysis: null
+              });
+              added++;
+            }
+          });
+
+          if (state.candidates.length > 0 && !state.candidates.some(c => c.id === state.activeId)) {
+            state.activeId = state.candidates[0].id;
+          }
+
+          persistState();
+          renderAll();
+          if (indicator) indicator.textContent = `● Tracker Synced (${state.candidates.length})`;
+          if (!isSilent) showToast(`Synced from Google Sheet: ${added} new, ${updated} updated`, "🔄");
+        } else {
+          throw new Error("doGet endpoint not found");
+        }
+      } catch (err) {
+        if (indicator) indicator.textContent = "● Offline / Walk-In Ready";
+        if (!isSilent) showToast("Using local roster (ensure doGet is deployed in Code.gs for live sheet pull).", "ℹ️");
+      }
+    }
+
+    function buildF2FSheetPayload(cand) {
+      const m = computeCandidateMetrics(cand);
+      const tel = computeSpeechTelemetry(cand);
+      const panelName = cand.panelPod || state.activePanel || "Panel 1";
+      const evalPair = state.panelEvaluators[panelName] || { snr: "Snr Designer", int: "Jnr Tech" };
+
+      const qaLines = INTERVIEW_QUESTIONS.map((q, idx) => {
+        const ans = (cand.notes && cand.notes[q.id]) ? cand.notes[q.id].trim() : "-";
+        return `Q${idx + 1}: ${ans}`;
+      }).join(" | ");
+
+      const combinedNotes = [
+        cand.snrNotes ? `[Snr Designer]: ${cand.snrNotes}` : "",
+        cand.intNotes ? `[Jnr Tech]: ${cand.intNotes}` : "",
+        qaLines
+      ].filter(Boolean).join(" || ");
+
+      return {
+        action: "saveF2FInterview",
+        timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+        refId: cand.refId,
+        name: cand.name,
+        graduation: cand.degree,
+        profile: cand.profile,
+        panelPod: panelName,
+        pod: panelName,
+        snrJudge: cand.snrJudge || evalPair.snr,
+        intJudge: cand.intJudge || evalPair.int,
+        assessmentScore: cand.assessmentScore,
+        testPct: m.testPct,
+        aiPct: m.aiPct,
+        aiContentPct: cand.aiAnalysis?.contentScore ?? m.aiPct,
+        aiCommPct: cand.aiAnalysis?.commScore ?? m.aiPct,
+        snrSum: m.snrSum,
+        snrPct: m.snrPct,
+        intSum: m.intSum,
+        intPct: m.intPct,
+        compositePct: m.composite,
+        verdict: cand.verdict,
+        speechMetrics: `${tel.seconds}s | ~${tel.wpm} WPM | ${tel.fillerCount} fillers`,
+        aiSummary: cand.aiAnalysis?.summary || "Not run",
+        qaTranscript: combinedNotes
+      };
+    }
+
+    function enqueueAndPushF2FResult(payload) {
+      try {
+        const raw = localStorage.getItem(F2F_PENDING_SYNC_KEY);
+        const queue = raw ? JSON.parse(raw) : [];
+        const filtered = queue.filter(item => item.refId !== payload.refId);
+        filtered.push(payload);
+        localStorage.setItem(F2F_PENDING_SYNC_KEY, JSON.stringify(filtered));
+      } catch (e) {}
+      flushPendingF2FQueue();
+    }
+
+    function flushPendingF2FQueue() {
+      const statusEl = document.getElementById("f2fSheetPushStatus");
+      let queue = [];
+      try {
+        const raw = localStorage.getItem(F2F_PENDING_SYNC_KEY);
+        queue = raw ? JSON.parse(raw) : [];
+      } catch (e) {}
+
+      if (queue.length === 0) return;
+
+      if (navigator.onLine === false) {
+        if (statusEl) statusEl.innerHTML = `<span class="text-amber-700 font-bold">⏳ Offline — ${queue.length} evaluation(s) queued for "Face to Face - Interview"...</span>`;
+        if (f2fRetryInterval) clearInterval(f2fRetryInterval);
+        f2fRetryInterval = setInterval(flushPendingF2FQueue, 5000);
+        return;
+      }
+
+      const url = state.trackerWebhookUrl || WEBHOOK_URL;
+      const itemToSend = queue[0];
+
+      fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(itemToSend)
+      })
+      .then(() => {
+        try {
+          const latestRaw = localStorage.getItem(F2F_PENDING_SYNC_KEY);
+          const latestQueue = latestRaw ? JSON.parse(latestRaw) : [];
+          const remaining = latestQueue.filter(x => x.refId !== itemToSend.refId);
+          localStorage.setItem(F2F_PENDING_SYNC_KEY, JSON.stringify(remaining));
+          if (remaining.length > 0) {
+            flushPendingF2FQueue();
+          } else {
+            clearInterval(f2fRetryInterval);
+            if (statusEl) statusEl.innerHTML = `<span class="text-emerald-700 font-bold">✅ Synced to "Face to Face - Interview" tab in Google Sheets!</span>`;
+          }
+        } catch (e) {}
+      })
+      .catch(() => {
+        if (statusEl) statusEl.innerHTML = `<span class="text-amber-700 font-bold">⚠️ Weak signal — auto-retrying push every 5s...</span>`;
+        if (f2fRetryInterval) clearInterval(f2fRetryInterval);
+        f2fRetryInterval = setInterval(flushPendingF2FQueue, 5000);
+      });
+    }
+
+    window.addEventListener("online", flushPendingF2FQueue);
+
+    // =========================================================================
+    // LIVE AUDIO CAPTURE & WEB SPEECH API TRANSCRIPTION (PER QUESTION & GLOBAL)
+    // =========================================================================
+    function toggleGlobalRecording() {
+      if (recordingTargetId === "global") {
+        stopActiveRecording();
+      } else {
+        startRecordingForTarget("global");
+      }
+    }
+
+    function toggleQuestionAudio(qId) {
+      if (recordingTargetId === qId) {
+        stopActiveRecording();
+      } else {
+        startRecordingForTarget(qId);
+      }
+    }
+
+    async function startRecordingForTarget(targetId) {
+      if (recordingTargetId) stopActiveRecording();
+      const cand = getActiveCandidate();
+      if (!cand) return;
+
+      recordingTargetId = targetId;
+      renderActiveWorkspace();
+
+      // 1. Live Speech-to-Text Transcription
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          activeSpeechRec = new SpeechRecognition();
+          activeSpeechRec.continuous = true;
+          activeSpeechRec.interimResults = true;
+          activeSpeechRec.lang = "en-IN";
+
+          const baseExisting = targetId === "global"
+            ? ""
+            : ((cand.notes && cand.notes[targetId]) ? cand.notes[targetId].trim() + " " : "");
+
+          activeSpeechRec.onresult = (event) => {
+            let finalChunk = "";
+            let interimChunk = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const t = event.results[i][0].transcript;
+              if (event.results[i].isFinal) finalChunk += t + " ";
+              else interimChunk += t;
+            }
+
+            const writeKey = targetId === "global" ? "q2" : targetId;
+            if (!cand.notes) cand.notes = {};
+            const currentBase = targetId === "global" ? ((cand.notes.q2 || "") + " ") : baseExisting;
+            if (finalChunk) {
+              cand.notes[writeKey] = (currentBase + finalChunk).trim();
+            }
+            const ta = document.getElementById("noteInput_" + writeKey);
+            if (ta) {
+              ta.value = (cand.notes[writeKey] || "") + (interimChunk ? " " + interimChunk : "");
+            }
+            updateTelemetryBarOnly(cand);
+          };
+
+          activeSpeechRec.onerror = () => {};
+          activeSpeechRec.start();
+        } catch (e) {}
+      }
+
+      // 2. Native Audio Capture via MediaRecorder
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          activeAudioChunks = [];
+          activeMediaRecorder = new MediaRecorder(stream);
+
+          activeMediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) activeAudioChunks.push(e.data);
+          };
+
+          activeMediaRecorder.onstop = () => {
+            stream.getTracks().forEach(track => track.stop());
+            if (activeAudioChunks.length > 0) {
+              const finalMime = activeMediaRecorder.mimeType || "audio/webm";
+              const blob = new Blob(activeAudioChunks, { type: finalMime });
+              const url = URL.createObjectURL(blob);
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64Data = String(reader.result || "").split(",")[1] || "";
+                if (!audioBlobsByCand[cand.id]) audioBlobsByCand[cand.id] = {};
+                audioBlobsByCand[cand.id][targetId] = { url, base64: base64Data, mimeType: finalMime };
+                renderActiveWorkspace();
+              };
+              reader.readAsDataURL(blob);
+            }
+          };
+
+          activeMediaRecorder.start();
+        } catch (err) {
+          showToast("Microphone permission unavailable—you can type or tap quick chips.", "⚠️");
+        }
+      }
+
+      // 3. Track Speaking Duration
+      clearInterval(speechTimerInterval);
+      speechTimerInterval = setInterval(() => {
+        cand.speechSeconds = (cand.speechSeconds || 0) + 1;
+        updateTelemetryBarOnly(cand);
+      }, 1000);
+    }
+
+    function stopActiveRecording() {
+      clearInterval(speechTimerInterval);
+      if (activeSpeechRec) {
+        try { activeSpeechRec.stop(); } catch (e) {}
+        activeSpeechRec = null;
+      }
+      if (activeMediaRecorder && activeMediaRecorder.state !== "inactive") {
+        try { activeMediaRecorder.stop(); } catch (e) {}
+      }
+      recordingTargetId = null;
+      persistState();
+      renderActiveWorkspace();
+      showToast("Audio answer saved", "🎙️");
+    }
+
+    function computeSpeechTelemetry(cand) {
+      const allText = Object.values(cand.notes || {}).join(" ").trim();
+      const words = allText ? allText.split(/\s+/).filter(Boolean) : [];
+      const wordCount = words.length;
+      const seconds = cand.speechSeconds || (wordCount > 0 ? Math.max(10, Math.round(wordCount / 2)) : 0);
+      const wpm = seconds > 0 ? Math.round((wordCount / seconds) * 60) : 0;
+
+      const lower = allText.toLowerCase();
+      let fillerCount = 0;
+      FILLER_WORDS.forEach(fw => {
+        const regex = new RegExp(`\\b${fw}\\b`, "g");
+        const matches = lower.match(regex);
+        if (matches) fillerCount += matches.length;
+      });
+
+      return { wordCount, seconds, wpm, fillerCount };
+    }
+
+    function updateTelemetryBarOnly(cand) {
+      const tel = computeSpeechTelemetry(cand);
+      document.getElementById("telemetryDuration").textContent = `${tel.seconds}s`;
+      document.getElementById("telemetryWpm").textContent = tel.wpm;
+      document.getElementById("telemetryFillers").textContent = tel.fillerCount;
+    }
+
+    // =========================================================================
+    // COMPOSITE SCORE ENGINE (4 DATASETS)
+    // =========================================================================
+    function computeCandidateMetrics(cand) {
+      const testPct = Math.min(100, Math.max(0, Math.round(((Number(cand.assessmentScore) || 0) / 30) * 100)));
+      const hasAi = !!(cand.aiAnalysis && typeof cand.aiAnalysis.score === "number");
+      const aiPct = hasAi ? Math.min(100, Math.max(0, Math.round(cand.aiAnalysis.score))) : 0;
+
+      const snrSum = (cand.snrRatings || [0, 0, 0, 0]).reduce((a, b) => a + Number(b), 0);
+      const snrPct = Math.round((snrSum / 20) * 100);
+
+      const intSum = (cand.intRatings || [0, 0, 0, 0]).reduce((a, b) => a + Number(b), 0);
+      const intPct = Math.round((intSum / 20) * 100);
+
+      const w = state.weights;
+      let weightedSum = (testPct * w.test) + (snrPct * w.snr) + (intPct * w.int);
+      let activeWeight = w.test + w.snr + w.int;
+
+      if (hasAi) {
+        weightedSum += (aiPct * w.ai);
+        activeWeight += w.ai;
+      }
+
+      const composite = activeWeight > 0 ? Number((weightedSum / activeWeight).toFixed(1)) : 0;
+      return { testPct, aiPct, hasAi, snrSum, snrPct, intSum, intPct, composite };
+    }
+
+    // =========================================================================
+    // MASTER RENDERING (MAIN WORKSPACE, ROSTER TAB & LEADERBOARD TAB)
+    // =========================================================================
+    function renderAll() {
+      document.getElementById("rosterCountBadge").textContent = state.candidates.length;
+      const selectedCount = state.candidates.filter(c => c.verdict === "Strong Hire" || c.verdict === "Shortlist").length;
+      document.getElementById("topQuotaSummary").textContent = `${selectedCount} / 7–10`;
+
+      renderActiveWorkspace();
+      renderRosterTable();
+      renderLeaderboardTable();
+      updateQuotaStats();
+    }
+
+    function renderActiveWorkspace() {
+      const cand = getActiveCandidate();
+      if (!cand) return;
+      const m = computeCandidateMetrics(cand);
+      const activeP = state.activePanel || cand.panelPod || "Panel 1";
+      const evalPair = state.panelEvaluators[activeP] || { snr: "Snr Designer", int: "Jnr Tech" };
+
+      // Candidate Selector Dropdown
+      const qSelect = document.getElementById("quickSwitchCandidateSelect");
+      qSelect.innerHTML = state.candidates.map(c =>
+        `<option value="${c.id}" ${c.id === cand.id ? "selected" : ""}>${escapeHtml(c.name)} (${escapeHtml(c.refId)})</option>`
+      ).join("");
+
+      document.getElementById("activeRefBadge").textContent = cand.refId;
+      const tag = document.getElementById("activeProfileTag");
+      tag.textContent = cand.profile === "NON-TECH" ? "NON-TECH" : "TECHNICAL";
+      tag.className = cand.profile === "NON-TECH"
+        ? "px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-rose-100 text-rose-800"
+        : "px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-100 text-blue-800";
+
+      document.getElementById("activeCandMeta").textContent =
+        `Degree: ${cand.degree} • Evaluators: ${evalPair.snr} & ${evalPair.int}`;
+      document.getElementById("activeVerdictSelect").value = cand.verdict || "Pending";
+
+      // Dataset 1: Assessment Score
+      document.getElementById("inputAssessmentScore").value = cand.assessmentScore || 0;
+      document.getElementById("assessmentPctBadge").textContent = m.testPct + "%";
+      document.getElementById("btnToggleTech").className = cand.profile === "TECH"
+        ? "px-2.5 py-1 rounded-lg text-xs font-bold bg-[#2563eb] text-white"
+        : "px-2.5 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-600";
+      document.getElementById("btnToggleNonTech").className = cand.profile === "NON-TECH"
+        ? "px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-600 text-white"
+        : "px-2.5 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-600";
+
+      // Global Audio Telemetry
+      updateTelemetryBarOnly(cand);
+      const globalBtn = document.getElementById("btnGlobalAudioToggle");
+      const globalLabel = document.getElementById("globalRecLabel");
+      if (recordingTargetId === "global") {
+        globalBtn.className = "relative recording-pulse px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-extrabold shadow flex items-center gap-1.5 transition";
+        globalLabel.textContent = "Stop Recording";
+      } else {
+        globalBtn.className = "relative px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold shadow flex items-center gap-1.5 transition";
+        globalLabel.textContent = "Record Full Session";
+      }
+
+      const globalAudioObj = audioBlobsByCand[cand.id]?.global;
+      const globalBar = document.getElementById("globalAudioPlaybackBar");
+      if (globalAudioObj && globalAudioObj.url) {
+        globalBar.classList.remove("hidden");
+        const player = document.getElementById("globalAudioPlayer");
+        if (player.src !== globalAudioObj.url) player.src = globalAudioObj.url;
+      } else {
+        globalBar.classList.add("hidden");
+      }
+
+      // Dataset 2: Render all 8 Questions prominently
+      renderQuestionsList(cand);
+
+      // AI Card
+      const aiCard = document.getElementById("aiResultCard");
+      if (m.hasAi) {
+        document.getElementById("aiScoreDisplay").textContent = `${cand.aiAnalysis.score} / 100`;
+        document.getElementById("aiContentScoreDisplay").textContent = `${cand.aiAnalysis.contentScore ?? cand.aiAnalysis.score}%`;
+        document.getElementById("aiCommScoreDisplay").textContent = `${cand.aiAnalysis.commScore ?? cand.aiAnalysis.score}%`;
+        document.getElementById("aiFitBadge").textContent = cand.aiAnalysis.fitTag || "Evaluated";
+        document.getElementById("aiSummaryText").textContent = cand.aiAnalysis.summary || "";
+        document.getElementById("aiStrengthsText").textContent = cand.aiAnalysis.strengths || "";
+        document.getElementById("aiCommNotesText").textContent = cand.aiAnalysis.commNotes || "";
+        document.getElementById("aiGapsText").textContent = cand.aiAnalysis.gaps || "";
+        aiCard.classList.remove("hidden");
+      } else {
+        document.getElementById("aiScoreDisplay").textContent = "— / 100";
+        document.getElementById("aiContentScoreDisplay").textContent = "—%";
+        document.getElementById("aiCommScoreDisplay").textContent = "—%";
+        aiCard.classList.add("hidden");
+      }
+
+      // Composite Hero Banner
+      document.getElementById("compositeScoreBig").textContent = `${m.composite}%`;
+      document.getElementById("miniTestPct").textContent = `${m.testPct}%`;
+      document.getElementById("miniAiPct").textContent = m.hasAi ? `${m.aiPct}%` : "Pending";
+      document.getElementById("miniSnrPct").textContent = `${m.snrPct}%`;
+      document.getElementById("miniIntPct").textContent = `${m.intPct}%`;
+
+      // Dataset 3: Snr Designer Sliders (0-Default)
+      (cand.snrRatings || [0, 0, 0, 0]).forEach((val, i) => {
+        document.getElementById(`sliderSnr${i + 1}`).value = val;
+        document.getElementById(`valSnr${i + 1}`).textContent = `${val} / 5`;
+      });
+      document.getElementById("snrTotalBadge").textContent = `${m.snrSum} / 20 (${m.snrPct}%)`;
+      document.getElementById("snrNotesInput").value = cand.snrNotes || "";
+      document.getElementById("snrZeroWarnBadge").classList.toggle("hidden", m.snrSum > 0);
+
+      // Dataset 4: Jnr Tech Sliders (0-Default)
+      (cand.intRatings || [0, 0, 0, 0]).forEach((val, i) => {
+        document.getElementById(`sliderInt${i + 1}`).value = val;
+        document.getElementById(`valInt${i + 1}`).textContent = `${val} / 5`;
+      });
+      document.getElementById("intTotalBadge").textContent = `${m.intSum} / 20 (${m.intPct}%)`;
+      document.getElementById("intNotesInput").value = cand.intNotes || "";
+      document.getElementById("intZeroWarnBadge").classList.toggle("hidden", m.intSum > 0);
+    }
+
+    function renderQuestionsList(cand) {
+      const container = document.getElementById("questionsContainer");
+      container.innerHTML = "";
+
+      INTERVIEW_QUESTIONS.forEach((q, idx) => {
+        const currentNote = (cand.notes && cand.notes[q.id]) || "";
+        const isRecThis = recordingTargetId === q.id;
+        const qAudio = audioBlobsByCand[cand.id]?.[q.id];
+
+        const box = document.createElement("div");
+        box.className = `p-3.5 rounded-xl border transition ${
+          isRecThis ? "border-rose-400 bg-rose-50/50 shadow-sm" : "border-slate-200 bg-slate-50/80"
+        }`;
+
+        const chipsHtml = q.quickChips.map(chip => `
+          <button type="button" onclick="appendQuickChip('${q.id}', '${chip.replace(/'/g, "\\'")}')"
+            class="px-2 py-0.5 rounded-md bg-white hover:bg-blue-50 border border-slate-200 text-[10px] font-semibold text-slate-700 transition">
+            + ${escapeHtml(chip)}
+          </button>
+        `).join("");
+
+        const cheatHtml = state.showCheatSheet ? `
+          <div class="mt-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-[11.5px] text-amber-950 leading-snug">
+            <strong>💡 Senior Designer Cheat Sheet:</strong> ${escapeHtml(q.cheatSheet)}
+          </div>
+        ` : "";
+
+        const audioPlayerHtml = qAudio && qAudio.url ? `
+          <div class="mt-2 flex items-center justify-between gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200">
+            <span class="text-[10px] font-bold text-emerald-700">🎧 Recorded Q${idx + 1} Audio:</span>
+            <audio src="${qAudio.url}" controls class="h-7 max-w-[230px]"></audio>
+          </div>
+        ` : "";
+
+        box.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span class="text-xs sm:text-sm font-extrabold text-slate-900">${escapeHtml(q.title)}</span>
+              <span class="ml-1.5 px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] font-bold">${q.phase}</span>
+            </div>
+            <button type="button" onclick="toggleQuestionAudio('${q.id}')"
+              class="shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-extrabold flex items-center gap-1 transition shadow-xs ${
+                isRecThis
+                  ? "bg-rose-600 text-white animate-pulse"
+                  : "bg-white hover:bg-rose-50 text-rose-700 border border-rose-200"
+              }">
+              <span>${isRecThis ? "⏹️ Stop Q" + (idx + 1) : "🎙️ Record Q" + (idx + 1)}</span>
+            </button>
+          </div>
+          <p class="text-xs font-medium text-slate-800 mt-1">${escapeHtml(q.prompt)}</p>
+          ${cheatHtml}
+          <div class="flex flex-wrap gap-1 mt-2">${chipsHtml}</div>
+          <textarea id="noteInput_${q.id}" rows="2" onchange="updateQuestionNote('${q.id}', this.value)"
+            placeholder="${isRecThis ? "Listening... speak clearly to auto-transcribe candidate response..." : "Live speech transcript or panel notes for Q" + (idx + 1) + "..."}"
+            class="mt-2 w-full px-2.5 py-1.5 text-xs rounded-lg border ${
+              isRecThis ? "border-rose-400 bg-white" : "border-slate-300 bg-white"
+            } focus:border-blue-500 outline-none">${escapeHtml(currentNote)}</textarea>
+          ${audioPlayerHtml}
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    // =========================================================================
+    // INTERACTIVE UPDATES
+    // =========================================================================
+    function toggleAllCheatSheets() {
+      state.showCheatSheet = !state.showCheatSheet;
+      document.getElementById("btnCheatToggle").textContent =
+        `💡 Senior Designer Cheat Sheet: ${state.showCheatSheet ? "ON" : "OFF"}`;
+      persistState();
+      renderActiveWorkspace();
+    }
+
+    function appendQuickChip(qId, chipText) {
+      const cand = getActiveCandidate();
+      if (!cand.notes) cand.notes = {};
+      const existing = (cand.notes[qId] || "").trim();
+      cand.notes[qId] = existing ? `${existing}; ${chipText}` : chipText;
+      persistState();
+      renderActiveWorkspace();
+    }
+
+    function updateQuestionNote(qId, val) {
+      const cand = getActiveCandidate();
+      if (!cand.notes) cand.notes = {};
+      cand.notes[qId] = val;
+      persistState();
+      updateTelemetryBarOnly(cand);
+    }
+
+    function updateAssessmentData() {
+      const cand = getActiveCandidate();
+      let score = parseInt(document.getElementById("inputAssessmentScore").value, 10);
+      if (isNaN(score)) score = 0;
+      cand.assessmentScore = Math.min(30, Math.max(0, score));
+      persistState();
+      renderAll();
+    }
+
+    function setCandidateProfile(profileType) {
+      const cand = getActiveCandidate();
+      cand.profile = profileType;
+      persistState();
+      renderAll();
+    }
+
+    function updateCandidateVerdict(verdictVal) {
+      const cand = getActiveCandidate();
+      cand.verdict = verdictVal;
+      const sel1 = document.getElementById("activeVerdictSelect");
+      const sel2 = document.getElementById("modalVerdictSelect");
+      if (sel1) sel1.value = verdictVal;
+      if (sel2) sel2.value = verdictVal;
+      persistState();
+      renderAll();
+    }
+
+    function updatePanelRatings() {
+      const cand = getActiveCandidate();
+      cand.snrRatings = [1, 2, 3, 4].map(i => Number(document.getElementById(`sliderSnr${i}`).value));
+      cand.intRatings = [1, 2, 3, 4].map(i => Number(document.getElementById(`sliderInt${i}`).value));
+      cand.snrNotes = document.getElementById("snrNotesInput").value;
+      cand.intNotes = document.getElementById("intNotesInput").value;
+      persistState();
+      renderAll();
+    }
+
+    function quickSwitchCandidate(candId) {
+      if (recordingTargetId) stopActiveRecording();
+      state.activeId = candId;
+      const cand = getActiveCandidate();
+      if (cand) {
+        cand.panelPod = state.activePanel || "Panel 1";
+        const pair = state.panelEvaluators[cand.panelPod] || { snr: "Snr Designer", int: "Jnr Tech" };
+        cand.snrJudge = pair.snr;
+        cand.intJudge = pair.int;
+      }
+      persistState();
+      resetTimer();
+      renderAll();
+    }
+
+    // =========================================================================
+    // ROSTER TAB RENDERING & FILTERING
+    // =========================================================================
+    function setRosterFilter(filterVal) {
+      state.rosterFilter = filterVal;
+      ["ALL", "PENDING", "COMPLETED", "TECH", "NON-TECH"].forEach(key => {
+        const btn = document.getElementById("filter" + key.replace("-", ""));
+        if (!btn) return;
+        btn.className = key === filterVal
+          ? "px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white"
+          : "px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600 hover:bg-slate-200";
+      });
+      renderRosterTable();
+    }
+
+    function renderRosterTable() {
+      const tbody = document.getElementById("rosterTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      const query = (document.getElementById("rosterSearchInput")?.value || "").trim().toLowerCase();
+
+      const filtered = state.candidates.filter(c => {
+        let matchesTab = true;
+        if (state.rosterFilter === "PENDING") matchesTab = !c.submitted;
+        else if (state.rosterFilter === "COMPLETED") matchesTab = !!c.submitted;
+        else if (state.rosterFilter === "TECH") matchesTab = c.profile === "TECH";
+        else if (state.rosterFilter === "NON-TECH") matchesTab = c.profile === "NON-TECH";
+
+        const matchesSearch = !query ||
+          c.name.toLowerCase().includes(query) ||
+          c.refId.toLowerCase().includes(query) ||
+          c.degree.toLowerCase().includes(query);
+        return matchesTab && matchesSearch;
+      });
+
+      filtered.forEach(cand => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition";
+        const isNonTech = cand.profile === "NON-TECH";
+        const pName = cand.panelPod || "Panel 1";
+        const pPill = (PANEL_THEMES[pName] || PANEL_THEMES["Panel 1"]).pill;
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-mono font-bold text-slate-700">${escapeHtml(cand.refId)}</td>
+          <td class="py-3 px-3">
+            <div class="font-extrabold text-slate-900">${escapeHtml(cand.name)}</div>
+            <div class="text-[11px] text-slate-500">${escapeHtml(cand.degree)}</div>
+          </td>
+          <td class="py-3 px-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${
+              isNonTech ? "bg-rose-100 text-rose-800" : "bg-blue-100 text-blue-800"
+            }">${cand.profile}</span>
+          </td>
+          <td class="py-3 px-3 font-extrabold text-slate-800">${cand.assessmentScore} / 30</td>
+          <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${pPill}">${escapeHtml(pName)}</span></td>
+          <td class="py-3 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+              cand.submitted ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+            }">${cand.submitted ? "Completed ✓" : "Pending"}</span>
+          </td>
+          <td class="py-3 px-3 text-right">
+            <button onclick="launchCandidateInterview('${cand.id}')" class="px-3 py-1.5 rounded-xl bg-[#2563eb] hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition">
+              Start Interview &rarr;
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function launchCandidateInterview(candId) {
+      if (recordingTargetId) stopActiveRecording();
+      state.activeId = candId;
+      const cand = getActiveCandidate();
+      if (cand) {
+        cand.panelPod = state.activePanel || "Panel 1";
+        const pair = state.panelEvaluators[cand.panelPod] || { snr: "Snr Designer", int: "Jnr Tech" };
+        cand.snrJudge = pair.snr;
+        cand.intJudge = pair.int;
+      }
+      persistState();
+      resetTimer();
+      switchMainTab("interview");
+      showToast(`Assigned ${cand.name} to ${state.activePanel}`, "🎙️");
+    }
+
+    // =========================================================================
+    // LEADERBOARD TAB (FILTERABLE BY PANEL 1–6)
+    // =========================================================================
+    function setLeaderboardPanelFilter(panelFilter) {
+      state.leaderboardPanelFilter = panelFilter;
+      ["ALL", "Panel 1", "Panel 2", "Panel 3", "Panel 4", "Panel 5", "Panel 6"].forEach(key => {
+        const btn = document.getElementById("lbFilter_" + key);
+        if (!btn) return;
+        btn.className = key === panelFilter
+          ? "px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-900 text-white"
+          : "px-2.5 py-1 text-[11px] font-bold rounded-lg text-slate-600 hover:bg-slate-200";
+      });
+      renderLeaderboardTable();
+    }
+
+    function renderLeaderboardTable() {
+      const tbody = document.getElementById("leaderboardTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      const filtered = state.candidates.filter(c => {
+        if (state.leaderboardPanelFilter === "ALL") return true;
+        return (c.panelPod || "Panel 1") === state.leaderboardPanelFilter;
+      });
+
+      const ranked = filtered
+        .map(c => ({ cand: c, m: computeCandidateMetrics(c) }))
+        .sort((a, b) => b.m.composite - a.m.composite);
+
+      const verdictColors = {
+        "Strong Hire": "bg-emerald-100 text-emerald-800 border-emerald-200",
+        "Shortlist": "bg-blue-100 text-blue-800 border-blue-200",
+        "Hold": "bg-amber-100 text-amber-800 border-amber-200",
+        "Reject": "bg-rose-100 text-rose-800 border-rose-200",
+        "Pending": "bg-slate-100 text-slate-600 border-slate-200"
+      };
+
+      ranked.forEach(({ cand, m }, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition";
+        const pName = cand.panelPod || "Panel 1";
+        const pPill = (PANEL_THEMES[pName] || PANEL_THEMES["Panel 1"]).pill;
+        const contentAi = cand.aiAnalysis?.contentScore ?? m.aiPct;
+        const commAi = cand.aiAnalysis?.commScore ?? m.aiPct;
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-extrabold text-slate-500">#${idx + 1}</td>
+          <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${pPill}">${escapeHtml(pName)}</span></td>
+          <td class="py-3 px-3">
+            <div class="font-extrabold text-slate-900">${escapeHtml(cand.name)} <span class="font-mono text-[10px] font-normal text-slate-500">(${escapeHtml(cand.refId)})</span></div>
+            <div class="text-[11px] text-slate-500">${escapeHtml(cand.degree)} • <strong class="${cand.profile === "NON-TECH" ? "text-rose-700" : "text-blue-700"}">${cand.profile}</strong></div>
+          </td>
+          <td class="py-3 px-3 font-bold">${cand.assessmentScore}/30 <span class="text-slate-500">(${m.testPct}%)</span></td>
+          <td class="py-3 px-3 font-bold text-blue-800">${m.hasAi ? `${m.aiPct}% <span class="text-[10px] font-normal text-slate-500">(C:${contentAi}% / V:${commAi}%)</span>` : "—"}</td>
+          <td class="py-3 px-3 font-bold text-amber-700">${m.snrSum}/20 (${m.snrPct}%)</td>
+          <td class="py-3 px-3 font-bold text-emerald-700">${m.intSum}/20 (${m.intPct}%)</td>
+          <td class="py-3 px-3 text-sm font-extrabold text-slate-900">${m.composite}%</td>
+          <td class="py-3 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${verdictColors[cand.verdict] || verdictColors["Pending"]}">${cand.verdict}</span>
+          </td>
+          <td class="py-3 px-3 text-right">
+            <button onclick="launchCandidateInterview('${cand.id}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold">
+              Review
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateQuotaStats() {
+      document.getElementById("statStrongHire").textContent = state.candidates.filter(c => c.verdict === "Strong Hire").length;
+      document.getElementById("statShortlist").textContent = state.candidates.filter(c => c.verdict === "Shortlist").length;
+      document.getElementById("statTotalCand").textContent = state.candidates.length;
+    }
+
+    // =========================================================================
+    // MANDATORY SUBMIT CONFIRMATION MODAL
+    // =========================================================================
+    function openSubmitConfirmationModal() {
+      if (recordingTargetId) stopActiveRecording();
+      const cand = getActiveCandidate();
+      const m = computeCandidateMetrics(cand);
+      const panelName = state.activePanel || cand.panelPod || "Panel 1";
+      cand.panelPod = panelName;
+
+      document.getElementById("modalPanelBadge").textContent = panelName;
+      document.getElementById("modalPanelBadge").className = `px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${(PANEL_THEMES[panelName] || PANEL_THEMES["Panel 1"]).pill}`;
+      document.getElementById("modalSubmitCandInfo").textContent =
+        `${cand.name} (${cand.refId}) • ${cand.degree} • ${cand.profile}`;
+
+      document.getElementById("modalSumTest").textContent = `${cand.assessmentScore} / 30 (${m.testPct}%)`;
+      document.getElementById("modalSumAi").textContent = m.hasAi
+        ? `${m.aiPct} / 100 (C:${cand.aiAnalysis.contentScore ?? m.aiPct}% | V:${cand.aiAnalysis.commScore ?? m.aiPct}%)`
+        : "Not Run Yet";
+      document.getElementById("modalSumSnr").textContent = `${m.snrSum} / 20 (${m.snrPct}%)`;
+      document.getElementById("modalSumInt").textContent = `${m.intSum} / 20 (${m.intPct}%)`;
+      document.getElementById("modalSumComposite").textContent = `${m.composite}%`;
+
+      if (!cand.verdict || cand.verdict === "Pending") {
+        const autoVerdict = m.composite >= 78 ? "Strong Hire" : (m.composite >= 62 ? "Shortlist" : (m.composite >= 45 ? "Hold" : "Reject"));
+        document.getElementById("modalVerdictSelect").value = autoVerdict;
+        cand.verdict = autoVerdict;
+      } else {
+        document.getElementById("modalVerdictSelect").value = cand.verdict;
+      }
+
+      const warnings = [];
+      if (m.snrSum === 0) warnings.push("⚠️ Interview Panel: Snr Designer rating is still at Default 0 / 20.");
+      if (m.intSum === 0) warnings.push("⚠️ Interview Panel: Jnr Tech rating is still at Default 0 / 20.");
+      if (!m.hasAi) warnings.push("⚠️ Gemini AI Audio & Q&A Analysis has not been run yet.");
+
+      const warnBox = document.getElementById("modalSubmitWarnings");
+      if (warnings.length > 0) {
+        warnBox.innerHTML = warnings.map(w => `<div>${w}</div>`).join("");
+        warnBox.classList.remove("hidden");
+      } else {
+        warnBox.classList.add("hidden");
+      }
+
+      document.getElementById("btnModalRunAiFirst").classList.toggle("hidden", m.hasAi);
+      document.getElementById("modalCardSnr").className = m.snrSum === 0
+        ? "p-3 rounded-xl bg-rose-50 border-2 border-rose-300"
+        : "p-3 rounded-xl bg-amber-50 border border-amber-200";
+      document.getElementById("modalCardInt").className = m.intSum === 0
+        ? "p-3 rounded-xl bg-rose-50 border-2 border-rose-300"
+        : "p-3 rounded-xl bg-emerald-50 border border-emerald-200";
+
+      document.getElementById("submitConfirmModal").classList.remove("hidden");
+    }
+
+    function closeSubmitConfirmationModal() {
+      document.getElementById("submitConfirmModal").classList.add("hidden");
+    }
+
+    async function runAiFromModal() {
+      closeSubmitConfirmationModal();
+      await analyzeInterviewWithGemini();
+      openSubmitConfirmationModal();
+    }
+
+    function confirmAndFinalizeSubmission() {
+      const cand = getActiveCandidate();
+      cand.verdict = document.getElementById("modalVerdictSelect").value;
+      cand.submitted = true;
+      cand.panelPod = state.activePanel || cand.panelPod || "Panel 1";
+
+      const f2fPayload = buildF2FSheetPayload(cand);
+      enqueueAndPushF2FResult(f2fPayload);
+
+      const nextPending = state.candidates.find(c => c.id !== cand.id && !c.submitted);
+      if (nextPending) {
+        state.activeId = nextPending.id;
+      }
+
+      persistState();
+      closeSubmitConfirmationModal();
+      resetTimer();
+      renderAll();
+      showToast(`Submitted ${cand.name} (${cand.panelPod} • ${cand.verdict}) to Google Sheet!`, "🚀");
+    }
+
+    // =========================================================================
+    // GEMINI AI AUDIO & Q&A EVALUATION (WITH EXPONENTIAL BACKOFF)
+    // =========================================================================
+    async function analyzeInterviewWithGemini() {
+      if (recordingTargetId) stopActiveRecording();
+      const cand = getActiveCandidate();
+      const tel = computeSpeechTelemetry(cand);
+      const btn = document.getElementById("btnRunAiAnalysis");
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin">⏳</span> Analyzing Audio &amp; Q&A with Gemini AI...`;
+
+      const transcriptLines = INTERVIEW_QUESTIONS.map(q => {
+        const ans = (cand.notes && cand.notes[q.id]) ? cand.notes[q.id] : "No response recorded";
+        return `${q.title}\nQuestion: ${q.prompt}\nCandidate Answer / Notes: ${ans}`;
+      }).join("\n\n");
+
+      const systemPrompt = `You are an expert Hiring Evaluator for Simplilearn's Intern drive (selecting 7-10 interns who will build interactive labs, AI-assisted scenarios, course launches, and LMS operations).
+Analyze BOTH:
+1. Technical & Content Accuracy (0-100):
+   - For TECH candidates: expect accurate logic on Config files (.json/.env), REST API testing (Postman/HTTP status codes), HTML semantics, divisibility without / or % via repeated subtraction, and single-pass O(n) HashSet duplicate removal.
+   - For NON-TECH candidates: do NOT penalize lack of coding syntax on Q6/Q7 if they show clear logical reasoning, strong end-user project storytelling, UI/UX awareness, and company research.
+2. Communication & Fluency (0-100):
+   - Evaluate clarity for an end user, confidence, speaking pace (${tel.wpm} WPM), and low filler words (${tel.fillerCount} detected). If audio inlineData is attached, listen directly to tone and articulation.
+Return strictly structured JSON matching the schema.`;
+
+      const userQuery = `Candidate: ${cand.name} (${cand.refId})
+Degree: ${cand.degree} | Track: ${cand.profile} | Panel: ${cand.panelPod || state.activePanel}
+Online Assessment Score: ${cand.assessmentScore}/30
+Speech Telemetry: ${tel.seconds}s recorded, ~${tel.wpm} WPM, ${tel.fillerCount} filler words
+Snr Designer Notes: ${cand.snrNotes || "None"}
+Jnr Tech Notes: ${cand.intNotes || "None"}
+
+Interview Q&A Transcript:
+${transcriptLines}`;
+
+      const parts = [{ text: userQuery }];
+      const candAudioMap = audioBlobsByCand[cand.id] || {};
+      const audioEntry = candAudioMap.global || Object.values(candAudioMap)[0];
+      if (audioEntry && audioEntry.base64) {
+        parts.push({
+          inlineData: {
+            mimeType: audioEntry.mimeType || "audio/webm",
+            data: audioEntry.base64
+          }
+        });
+      }
+
+      const payload = {
+        contents: [{ parts }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              contentScore: { type: "NUMBER" },
+              commScore: { type: "NUMBER" },
+              score: { type: "NUMBER" },
+              fitTag: { type: "STRING" },
+              summary: { type: "STRING" },
+              strengths: { type: "STRING" },
+              commNotes: { type: "STRING" },
+              gaps: { type: "STRING" }
+            },
+            required: ["contentScore", "commScore", "score", "fitTag", "summary", "strengths", "commNotes", "gaps"]
+          }
+        }
+      };
+
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+      try {
+        const response = await fetchWithBackoff(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) throw new Error("Empty AI response");
+
+        const parsed = JSON.parse(rawText);
+        const cScore = Math.min(100, Math.max(0, Math.round(parsed.contentScore || parsed.score || 70)));
+        const vScore = Math.min(100, Math.max(0, Math.round(parsed.commScore || parsed.score || 70)));
+        const combined = Math.min(100, Math.max(0, Math.round(parsed.score || ((cScore + vScore) / 2))));
+
+        cand.aiAnalysis = {
+          contentScore: cScore,
+          commScore: vScore,
+          score: combined,
+          fitTag: parsed.fitTag || "AI Evaluated",
+          summary: parsed.summary || "",
+          strengths: parsed.strengths || "",
+          commNotes: parsed.commNotes || "",
+          gaps: parsed.gaps || ""
+        };
+        persistState();
+        renderAll();
+        showToast("Gemini AI Answer & Communication analysis complete!", "✨");
+      } catch (err) {
+        const filledCount = INTERVIEW_QUESTIONS.filter(q => cand.notes && cand.notes[q.id] && cand.notes[q.id].trim().length > 2).length;
+        const cScore = Math.min(95, Math.max(40, Math.round((filledCount / 8) * 85)));
+        const vScore = Math.min(95, Math.max(50, 82 - (tel.fillerCount * 3)));
+        const combined = Math.round((cScore + vScore) / 2);
+
+        cand.aiAnalysis = {
+          contentScore: cScore,
+          commScore: vScore,
+          score: combined,
+          fitTag: cand.profile === "TECH" ? "Tech Track (Local Rubric)" : "Design/Ops Track (Local Rubric)",
+          summary: `Evaluated ${filledCount}/8 interview checkpoints locally (${tel.wordCount} words captured, ${tel.fillerCount} filler words).`,
+          strengths: "Completed structured 8-question walkthrough",
+          commNotes: `Pace ~${tel.wpm} WPM • ${tel.fillerCount} filler words detected`,
+          gaps: "Connect to live Gemini API key for deep multimodal review"
+        };
+        persistState();
+        renderAll();
+        showToast("Generated rubric & speech telemetry score", "⚡");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>✨ Analyze Audio &amp; Answers with Gemini AI</span>`;
+      }
+    }
+
+    async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const res = await fetch(url, options);
+          if (res.ok) return res;
+        } catch (e) {}
+        if (i < retries - 1) await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
+      }
+      throw new Error("Network request failed after retries");
+    }
+
+    // =========================================================================
+    // QUICK WALK-IN ENTRY, TSV PASTE IMPORT, WEIGHTS & CSV EXPORT
+    // =========================================================================
+    function openQuickWalkInModal() {
+      document.getElementById("newCandRef").value = "SL-" + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById("newCandName").value = "";
+      document.getElementById("newCandDegree").value = "";
+      document.getElementById("newCandScore").value = "0";
+      document.getElementById("quickWalkInModal").classList.remove("hidden");
+    }
+
+    function closeQuickWalkInModal() {
+      document.getElementById("quickWalkInModal").classList.add("hidden");
+    }
+
+    function saveNewCandidate() {
+      const refId = document.getElementById("newCandRef").value.trim() || ("SL-" + Math.floor(1000 + Math.random() * 9000));
+      const name = document.getElementById("newCandName").value.trim();
+      const degree = document.getElementById("newCandDegree").value.trim() || "Graduate";
+      const score = Math.min(30, Math.max(0, parseInt(document.getElementById("newCandScore").value, 10) || 0));
+      const profile = document.querySelector('input[name="newCandProfile"]:checked').value;
+
+      if (!name) {
+        showToast("Please enter candidate name", "⚠️");
+        return;
+      }
+
+      const activeP = state.activePanel || "Panel 1";
+      const evalPair = state.panelEvaluators[activeP] || { snr: "Snr Designer 1", int: "Jnr Tech 1" };
+      const newId = "c_" + Date.now();
+
+      state.candidates.unshift({
+        id: newId,
+        refId,
+        name,
+        degree,
+        profile,
+        panelPod: activeP,
+        assessmentScore: score,
+        verdict: "Pending",
+        submitted: false,
+        snrJudge: evalPair.snr,
+        intJudge: evalPair.int,
+        snrRatings: [0, 0, 0, 0],
+        snrNotes: "",
+        intRatings: [0, 0, 0, 0],
+        intNotes: "",
+        notes: {},
+        speechSeconds: 0,
+        aiAnalysis: null
+      });
+
+      state.activeId = newId;
+      persistState();
+      closeQuickWalkInModal();
+      resetTimer();
+      switchMainTab("interview");
+      showToast(`Loaded ${name} into ${activeP}`);
+    }
+
+    function importFromSheetPaste() {
+      const raw = document.getElementById("bulkSheetPasteInput").value.trim();
+      if (!raw) {
+        showToast("Paste rows from your Google Sheet first", "⚠️");
+        return;
+      }
+
+      const lines = raw.split(/\r?\n/).filter(l => l.trim() !== "");
+      let addedCount = 0;
+
+      lines.forEach((line, idx) => {
+        const cols = line.split("\t");
+        if (cols.length < 3) return;
+        if (cols[1] && cols[1].toLowerCase().includes("ref id")) return;
+
+        const refId = (cols[1] || `SL-${1000 + idx}`).trim();
+        const name = (cols[2] || "").trim();
+        if (!name) return;
+        const degree = (cols[3] || "Graduate").trim();
+        const profileRaw = (cols[6] || "").toUpperCase();
+        const profile = profileRaw.includes("NON-TECH") ? "NON-TECH" : "TECH";
+        const scoreVal = parseInt(cols[8], 10);
+        const assessmentScore = isNaN(scoreVal) ? 0 : Math.min(30, Math.max(0, scoreVal));
+
+        state.candidates.push({
+          id: "c_imp_" + Date.now() + "_" + idx,
+          refId,
+          name,
+          degree,
+          profile,
+          panelPod: state.activePanel || "Panel 1",
+          assessmentScore,
+          verdict: "Pending",
+          submitted: false,
+          snrJudge: "Snr Designer",
+          intJudge: "Jnr Tech",
+          snrRatings: [0, 0, 0, 0],
+          snrNotes: "",
+          intRatings: [0, 0, 0, 0],
+          intNotes: "",
+          notes: {},
+          speechSeconds: 0,
+          aiAnalysis: null
+        });
+        addedCount++;
+      });
+
+      document.getElementById("bulkSheetPasteInput").value = "";
+      persistState();
+      renderAll();
+      showToast(`Imported ${addedCount} candidates from pasted rows`, "📥");
+    }
+
+    function openWeightModal() {
+      document.getElementById("wSliderTest").value = state.weights.test;
+      document.getElementById("wSliderAi").value = state.weights.ai;
+      document.getElementById("wSliderSnr").value = state.weights.snr;
+      document.getElementById("wSliderInt").value = state.weights.int;
+      updateWeightsUI();
+      document.getElementById("weightModal").classList.remove("hidden");
+    }
+
+    function closeWeightModal() {
+      document.getElementById("weightModal").classList.add("hidden");
+    }
+
+    function updateWeightsUI() {
+      state.weights = {
+        test: Number(document.getElementById("wSliderTest").value),
+        ai: Number(document.getElementById("wSliderAi").value),
+        snr: Number(document.getElementById("wSliderSnr").value),
+        int: Number(document.getElementById("wSliderInt").value)
+      };
+      document.getElementById("wLblTest").textContent = state.weights.test + "%";
+      document.getElementById("wLblAi").textContent = state.weights.ai + "%";
+      document.getElementById("wLblSnr").textContent = state.weights.snr + "%";
+      document.getElementById("wLblInt").textContent = state.weights.int + "%";
+      persistState();
+      renderAll();
+    }
+
+    function resetDefaultWeights() {
+      state.weights = { test: 25, ai: 25, snr: 25, int: 25 };
+      openWeightModal();
+    }
+
+    function exportToCSV() {
+      const headers = [
+        "Rank", "Panel", "Ref ID", "Full Name", "Degree", "Track",
+        "1. Assessment (/30)", "1. Assessment (%)",
+        "2. AI Content (%)", "2. AI Comm (%)", "2. AI Combined (%)",
+        "3. Snr Designer (/20)", "3. Snr Designer (%)", "Snr Judge", "Snr Notes",
+        "4. Jnr Tech (/20)", "4. Jnr Tech (%)", "Jnr Tech Judge", "Jnr Tech Notes",
+        "Composite Score (%)", "Final Verdict"
+      ];
+
+      const ranked = state.candidates
+        .map(c => ({ cand: c, m: computeCandidateMetrics(c) }))
+        .sort((a, b) => b.m.composite - a.m.composite);
+
+      const rows = ranked.map(({ cand, m }, i) => [
+        i + 1,
+        cand.panelPod || "Panel 1",
+        cand.refId,
+        cand.name,
+        cand.degree,
+        cand.profile,
+        cand.assessmentScore,
+        m.testPct + "%",
+        cand.aiAnalysis?.contentScore ?? "",
+        cand.aiAnalysis?.commScore ?? "",
+        m.hasAi ? m.aiPct + "%" : "",
+        m.snrSum,
+        m.snrPct + "%",
+        cand.snrJudge || "",
+        cand.snrNotes || "",
+        m.intSum,
+        m.intPct + "%",
+        cand.intJudge || "",
+        cand.intNotes || "",
+        m.composite + "%",
+        cand.verdict
+      ]);
+
+      const csvContent = [headers, ...rows]
+        .map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Simplilearn_MultiPanel_4Dataset_Results_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Exported Multi-Panel CSV!", "📥");
+    }
+  </script>
+</body>
+</html>
